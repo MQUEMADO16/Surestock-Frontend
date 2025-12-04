@@ -129,7 +129,7 @@ const Settings = () => {
     <Box sx={{ pb: 8 }} maxHeight='600px'>
       {/* Header Section */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight="600" color="primary">Business Settings</Typography>
+        <Typography variant="h4" fontWeight="600">Business Settings</Typography>
         
         {isOwner && (
           <Box sx={{ display: 'flex', gap: 2 }}>
@@ -169,7 +169,7 @@ const Settings = () => {
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
       <Paper elevation={2} sx={{ p: 4 }}>
-        <Typography variant="h6" gutterBottom color="primary">
+        <Typography variant="h6" gutterBottom>
           General Information
         </Typography>
         <Divider sx={{ mb: 4 }} />
@@ -218,7 +218,7 @@ const Settings = () => {
           {/* New Section Divider */}
           <Grid size={{xs: 12}}>
             <Box sx={{ mt: 2 }}>
-              <Typography variant="h6" gutterBottom color="primary">
+              <Typography variant="h6" gutterBottom>
                 Configuration & Defaults
               </Typography>
               <Divider />

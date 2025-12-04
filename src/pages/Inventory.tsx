@@ -179,7 +179,7 @@ const Inventory = () => {
     <Box>
       {/* Header & Actions */}
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', mb: 3, gap: 2 }}>
-        <Typography variant="h4" fontWeight="600" color="primary">Inventory</Typography>
+        <Typography variant="h4" fontWeight="600">Inventory</Typography>
         
         <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' } }}>
           <TextField

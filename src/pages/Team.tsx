@@ -109,7 +109,7 @@ const Team = () => {
     <Box>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight="600" color="primary">Team Overview</Typography>
+        <Typography variant="h4" fontWeight="600">Team Overview</Typography>
         {isOwner && (
           <Button 
             variant="contained" 
