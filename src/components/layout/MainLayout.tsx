@@ -88,10 +88,10 @@ const MainLayout = () => {
                 sx={{ 
                   width: 38, 
                   height: 38, 
-                  bgcolor: '#ffffff',
-                  color: '#284B66', // Matches header blue
+                  bgcolor: '#1976d2',
+                  color: '#ffffff',
                   fontSize: '1.4rem', 
-                  fontWeight: 520,
+                  fontWeight: 500,
                   pt: '4px',
                   boxShadow: '0 2px 5px rgba(0,0,0,0.3)' // Pop the avatar
                 }}

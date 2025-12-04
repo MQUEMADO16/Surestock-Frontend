@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
+import Team from './pages/Team';
 import MainLayout from './components/layout/MainLayout';
 import { Typography } from '@mui/material';
 
@@ -25,7 +26,6 @@ const Dashboard = () => <Typography variant="h4">Dashboard Overview</Typography>
 const Inventory = () => <Typography variant="h4">Inventory Management</Typography>;
 const Checkout = () => <Typography variant="h4">Sales & Checkout</Typography>;
 const Reports = () => <Typography variant="h4">Analytics & Reports</Typography>;
-const Team = () => <Typography variant="h4">Team Management</Typography>;
 
 function App() {
   return (
