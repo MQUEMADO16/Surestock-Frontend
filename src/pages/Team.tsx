@@ -11,7 +11,7 @@ import {
   Security as SecurityIcon,
   Badge as BadgeIcon,
   Email as EmailIcon,
-  Warning as WarningIcon
+  Lock as LockIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { User } from '../types/models';
@@ -28,6 +28,7 @@ const Team = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
 
   const isOwner = currentUser?.role === 'OWNER';
 
@@ -49,25 +50,34 @@ const Team = () => {
   }, [loadUsers]);
 
   const handleAddMember = async () => {
-    if (!newUserEmail) return;
+    if (!newUserEmail || !newUserPassword) return; // Ensure both fields are filled
     try {
       setDialogLoading(true);
       
       const payload: CreateEmployeeRequest = {
         email: newUserEmail,
-        password: 'Welcome123!' // Default temporary password
+        password: newUserPassword // Use the manually entered password
       };
 
       await userService.createEmployee(payload);
       await loadUsers(); // Refresh list
+      
+      // Reset and close
       setOpenDialog(false);
       setNewUserEmail('');
+      setNewUserPassword('');
     } catch (err) {
       console.error(err);
       setError('Failed to add team member.');
     } finally {
       setDialogLoading(false);
     }
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setNewUserEmail('');
+    setNewUserPassword('');
   };
 
   const handleDelete = async (id: number) => {
@@ -201,12 +211,12 @@ const Team = () => {
       )}
 
       {/* Add Member Dialog */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="xs" fullWidth>
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="xs" fullWidth>
         <DialogTitle>Add New Employee</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Alert severity="info" icon={<WarningIcon fontSize="inherit" />}>
-              Default password will be set to: <strong>Welcome123!</strong>
+            <Alert severity="info">
+              Enter the credentials for the new employee.
             </Alert>
             <TextField
               label="Email Address"
@@ -215,15 +225,30 @@ const Team = () => {
               type="email"
               value={newUserEmail}
               onChange={(e) => setNewUserEmail(e.target.value)}
+              InputProps={{
+                startAdornment: <EmailIcon color="action" sx={{ mr: 1 }} />
+              }}
+            />
+            <TextField
+              label="Set Password"
+              fullWidth
+              variant="outlined"
+              type="password"
+              value={newUserPassword}
+              onChange={(e) => setNewUserPassword(e.target.value)}
+              InputProps={{
+                startAdornment: <LockIcon color="action" sx={{ mr: 1 }} />
+              }}
+              helperText="Set a strong temporary password."
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button 
             variant="contained" 
             onClick={handleAddMember} 
-            disabled={!newUserEmail || dialogLoading}
+            disabled={!newUserEmail || !newUserPassword || dialogLoading}
           >
             {dialogLoading ? 'Adding...' : 'Add Member'}
           </Button>
