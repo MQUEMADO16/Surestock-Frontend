@@ -2,8 +2,9 @@ import React, { JSX } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
+import Settings from './pages/Settings';
 import MainLayout from './components/layout/MainLayout';
-import { Box, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 
 // Guard Component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -25,7 +26,6 @@ const Inventory = () => <Typography variant="h4">Inventory Management</Typograph
 const Checkout = () => <Typography variant="h4">Sales & Checkout</Typography>;
 const Reports = () => <Typography variant="h4">Analytics & Reports</Typography>;
 const Team = () => <Typography variant="h4">Team Management</Typography>;
-const Settings = () => <Typography variant="h4">Business Settings</Typography>;
 
 function App() {
   return (

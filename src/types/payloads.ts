@@ -20,10 +20,10 @@ export interface CreateEmployeeRequest {
 
 // Business
 export interface BusinessSettingsUpdate {
-  name?: string;
-  currency?: string;
-  taxRate?: number;
-  lowStockThreshold?: number;
+  name: string;
+  currency: string;
+  taxRate: number;
+  lowStockThreshold: number;
   contactAddress?: string;
 }
 
