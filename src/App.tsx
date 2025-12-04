@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
 import Team from './pages/Team';
+import Inventory from './pages/Inventory';
 import MainLayout from './components/layout/MainLayout';
 import { Typography } from '@mui/material';
 
@@ -23,7 +24,6 @@ const PublicRoute = ({ children }: { children: JSX.Element }) => {
 
 // Placeholder Pages (We will build these out individually later)
 const Dashboard = () => <Typography variant="h4">Dashboard Overview</Typography>;
-const Inventory = () => <Typography variant="h4">Inventory Management</Typography>;
 const Checkout = () => <Typography variant="h4">Sales & Checkout</Typography>;
 const Reports = () => <Typography variant="h4">Analytics & Reports</Typography>;
 
