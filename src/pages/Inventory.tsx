@@ -10,13 +10,13 @@ import {
   Search as SearchIcon, 
   Edit as EditIcon, 
   Delete as DeleteIcon, 
-  Inventory as InventoryIcon, 
+  Inventory as InventoryIcon,
   SwapVert as StockIcon,
   Warning as WarningIcon,
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
-import { Product } from '../types/models';
+import { Product, Business } from '../types/models';
 import { CreateProductRequest, UpdateProductDetailsRequest } from '../types/payloads';
 import productService from '../services/productService';
 import businessService from '../services/businessService';
@@ -213,12 +213,12 @@ const Inventory = () => {
         <Table sx={{ minWidth: 650 }}>
           <TableHead sx={{ bgcolor: '#f5f5f5' }}>
             <TableRow>
-              <TableCell><strong>Product Name</strong></TableCell>
-              <TableCell><strong>SKU</strong></TableCell>
-              <TableCell align="right"><strong>Price</strong></TableCell>
+              <TableCell align="left"><strong>Product Name</strong></TableCell>
+              <TableCell align="center"><strong>SKU</strong></TableCell>
+              <TableCell align="center"><strong>Price</strong></TableCell>
               <TableCell align="center"><strong>Quantity</strong></TableCell>
               <TableCell align="center"><strong>Status</strong></TableCell>
-              <TableCell align="right"><strong>Actions</strong></TableCell>
+              <TableCell align="center"><strong>Actions</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -237,13 +237,13 @@ const Inventory = () => {
             ) : (
               filteredProducts.map((product) => (
                 <TableRow key={product.id} hover>
-                  <TableCell>
+                  <TableCell align="left">
                     <Typography variant="body1" fontWeight="500">{product.name}</Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="center">
                     <Chip label={product.sku} size="small" variant="outlined" sx={{ fontFamily: 'monospace' }} />
                   </TableCell>
-                  <TableCell align="right">${product.price.toFixed(2)}</TableCell>
+                  <TableCell align="center">${product.price.toFixed(2)}</TableCell>
                   <TableCell align="center">
                     <Typography 
                       color={isLowStock(product) ? 'error.main' : 'text.primary'}
@@ -258,7 +258,7 @@ const Inventory = () => {
                       <Chip label="In Stock" color="success" size="small" variant="outlined" />
                     )}
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="center">
                     <Tooltip title="Update Stock">
                       <IconButton color="primary" onClick={() => handleOpenStock(product)}>
                         <StockIcon />
