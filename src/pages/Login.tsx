@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Container, Paper, TextField, Button, Typography, Box, Alert, Tab, Tabs 
+  Container, Paper, TextField, Button, Typography, Box, Alert, Tab, Tabs, InputAdornment, Tooltip, IconButton
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import authService from '../services/authService';
 
 const Login = () => {
@@ -12,9 +13,16 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [businessName, setBusinessName] = useState(''); // Only for Register
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+  
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,12 +105,30 @@ const Login = () => {
             />
             <TextField
               label="Password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               fullWidth
               margin="normal"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              slotProps={{
+                input: {
+                  endAdornment: (
+                  <InputAdornment position="end">
+                    <Tooltip title={showPassword ? 'Hide' : 'Show'}>
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </Tooltip>
+                  </InputAdornment>
+                  )
+                }
+              }}
             />
             
             <Button 

@@ -2,15 +2,19 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Box, Typography, Paper, Button, Grid, Avatar, Chip, IconButton, 
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, 
-  CircularProgress, Alert, Card, CardContent, CardActions, Tooltip, Divider
+  CircularProgress, Alert, Card, CardContent, CardActions, Tooltip, Divider,
+  InputAdornment
 } from '@mui/material';
 import { 
   Add as AddIcon, 
+  Edit as EditIcon, 
   Delete as DeleteIcon,
   Security as SecurityIcon,
   Badge as BadgeIcon,
   Email as EmailIcon,
-  Lock as LockIcon
+  Lock as LockIcon,
+  Visibility,
+  VisibilityOff
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { User } from '../types/models';
@@ -28,6 +32,7 @@ const Team = () => {
   const [dialogLoading, setDialogLoading] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const isOwner = currentUser?.role === 'OWNER';
 
@@ -55,16 +60,13 @@ const Team = () => {
       
       const payload: CreateEmployeeRequest = {
         email: newUserEmail,
-        password: newUserPassword // Use the manually entered password
+        password: newUserPassword 
       };
 
       await userService.createEmployee(payload);
       await loadUsers(); // Refresh list
       
-      // Reset and close
-      setOpenDialog(false);
-      setNewUserEmail('');
-      setNewUserPassword('');
+      handleCloseDialog();
     } catch (err) {
       console.error(err);
       setError('Failed to add team member.');
@@ -77,6 +79,13 @@ const Team = () => {
     setOpenDialog(false);
     setNewUserEmail('');
     setNewUserPassword('');
+    setShowPassword(false); // Reset visibility state
+  };
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
   };
 
   const handleDelete = async (id: number) => {
@@ -187,6 +196,11 @@ const Team = () => {
                 {/* Only Owners see actions */}
                 {isOwner && (
                   <CardActions sx={{ justifyContent: 'flex-end', bgcolor: '#fafafa', borderTop: '1px solid #eee' }}>
+                    <Tooltip title="Edit Member">
+                      <IconButton size="small">
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="Remove Member">
                       <IconButton 
                         size="small" 
@@ -220,20 +234,35 @@ const Team = () => {
               value={newUserEmail}
               onChange={(e) => setNewUserEmail(e.target.value)}
               InputProps={{
-                startAdornment: <EmailIcon color="action" sx={{ mr: 1 }} />
+                startAdornment: <InputAdornment position="start"><EmailIcon color="action" /></InputAdornment>
               }}
             />
             <TextField
               label="Set Password"
               fullWidth
               variant="outlined"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={newUserPassword}
               onChange={(e) => setNewUserPassword(e.target.value)}
-              InputProps={{
-                startAdornment: <LockIcon color="action" sx={{ mr: 1 }} />
+              slotProps={{
+                input: {
+                  startAdornment: <InputAdornment position="start"><LockIcon color="action" /></InputAdornment>,
+                  endAdornment: (
+                  <InputAdornment position="end">
+                    <Tooltip title={showPassword ? 'Hide' : 'Show'}>
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </Tooltip>
+                  </InputAdornment>
+                  )
+                }
               }}
-              helperText="Set a strong temporary password."
             />
           </Box>
         </DialogContent>
