@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   Container, Paper, TextField, Button, Typography, Box, Alert, Tab, Tabs 
 } from '@mui/material';
-import api from '../services/api';
+import authService from '../services/authService';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true); // Toggle between Login and Register
@@ -24,8 +24,7 @@ const Login = () => {
       if (isLogin) {
         await login({ email, password });
       } else {
-        // Register Flow
-        await api.post('/auth/register', {
+        await authService.register({
           email,
           password,
           role: 'OWNER',
