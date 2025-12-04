@@ -4,9 +4,9 @@ const theme = createTheme({
   palette: {
     primary: {
       // A professional, steel-blue tone.
-      main: '#3E6B8E', 
-      light: '#6E98BF', // Lighter variant for hovers/accents
-      dark: '#1d5176ff',  // Darker variant for active states
+      main: '#2d83c5ff', 
+      light: '#62aaeeff', // Lighter variant for hovers/accents
+      dark: '#004d85ff',  // Darker variant for active states
       contrastText: '#ffffff',
     },
     secondary: {
@@ -36,7 +36,7 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: '#1d5176ff', // Uses the darker variant for the header to ground the page
+          backgroundColor: '#004d85ff', // Uses the darker variant for the header to ground the page
           boxShadow: 'none',
         },
       },

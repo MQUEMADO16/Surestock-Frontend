@@ -56,7 +56,7 @@ const MainLayout = () => {
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: '#1d5176ff', // Deep Blue
+          backgroundColor: '#004d85ff', // Deep Blue
           boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)', // Adds depth/shadow below header
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)' // Subtle divider
         }}
@@ -71,8 +71,9 @@ const MainLayout = () => {
               display: 'flex', 
               alignItems: 'center', 
               fontWeight: 700, 
-              letterSpacing: '0.5px' 
+              letterSpacing: '0.5px'
             }}
+            ml='10px'
           >
             SureStock
           </Typography>

@@ -6,7 +6,6 @@ import {
 } from '@mui/material';
 import { 
   Add as AddIcon, 
-  Edit as EditIcon, 
   Delete as DeleteIcon,
   Security as SecurityIcon,
   Badge as BadgeIcon,
@@ -102,7 +101,7 @@ const Team = () => {
     <Box>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight="600" color="primary">Team Management</Typography>
+        <Typography variant="h4" fontWeight="600" color="primary">Team Overview</Typography>
         {isOwner && (
           <Button 
             variant="contained" 
@@ -118,7 +117,7 @@ const Team = () => {
 
       {/* Leadership Section */}
       <Typography variant="h6" gutterBottom sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <SecurityIcon color="secondary" /> Leadership
+        <SecurityIcon color="primary" /> Leadership
       </Typography>
       <Divider sx={{ mb: 3 }} />
 
@@ -188,11 +187,6 @@ const Team = () => {
                 {/* Only Owners see actions */}
                 {isOwner && (
                   <CardActions sx={{ justifyContent: 'flex-end', bgcolor: '#fafafa', borderTop: '1px solid #eee' }}>
-                    <Tooltip title="Edit Member">
-                      <IconButton size="small">
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
                     <Tooltip title="Remove Member">
                       <IconButton 
                         size="small" 
