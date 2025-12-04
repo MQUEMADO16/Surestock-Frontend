@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Box, Typography, Paper, TextField, Button, Grid, Divider, Alert, 
-  CircularProgress, InputAdornment
+  CircularProgress, InputAdornment, Dialog, DialogTitle, DialogContent, 
+  DialogContentText, DialogActions
 } from '@mui/material';
 import { 
   Edit as EditIcon, 
@@ -11,15 +12,20 @@ import {
   AttachMoney as CurrencyIcon,
   LocationOn as LocationIcon,
   Percent as TaxIcon,
-  Inventory as StockIcon
+  Inventory as StockIcon,
+  DeleteForever as DeleteForeverIcon,
+  Warning as WarningIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { Business } from '../types/models';
 import { BusinessSettingsUpdate } from '../types/payloads';
 import businessService from '../services/businessService';
+import { useNavigate } from 'react-router-dom';
+import userService from '../services/userService';
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth(); // Assuming logout is available in AuthContext
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,6 +34,11 @@ const Settings = () => {
   // Edit Mode State
   const [isEditing, setIsEditing] = useState(false);
   
+  // Delete Dialog State
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Typed form data based on your Payloads.ts
   const [formData, setFormData] = useState<BusinessSettingsUpdate>({
     name: '',
@@ -95,10 +106,27 @@ const Settings = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleDeleteBusiness = async () => {
+    if (deleteConfirmation.toLowerCase() !== 'delete') return;
+    
+    try {
+      setIsDeleting(true);
+      await userService.closeAccount();
+      // Logout and redirect to login page after successful deletion
+      logout(); 
+      navigate('/login'); 
+    } catch (err) {
+      setError('Failed to delete business. Please try again.');
+      setOpenDeleteDialog(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) return <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}><CircularProgress /></Box>;
 
   return (
-    <Box>
+    <Box sx={{ pb: 8 }} maxHeight='600px'>
       {/* Header Section */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" fontWeight="600" color="primary">Business Settings</Typography>
@@ -263,6 +291,91 @@ const Settings = () => {
 
         </Grid>
       </Paper>
+      
+      {/* Danger Zone - Only for Owners */}
+      {isOwner && (
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 4, 
+            border: '1px solid #c22222ff', 
+            bgcolor: '#fff5f5',
+            borderRadius: 2,
+            mt: 10
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, color: '#c22222ff' }} mt='2'>
+            <WarningIcon />
+            <Typography variant="h6" fontWeight="bold">Danger Zone</Typography>
+          </Box>
+          <Divider sx={{ mb: 3, borderColor: '#ffcdd2' }} />
+          
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Box>
+              <Typography variant="subtitle1" fontWeight="bold">Delete Business Account</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Permanently delete your business account and all associated data (inventory, sales, employees). 
+                This action cannot be undone.
+              </Typography>
+            </Box>
+            <Button 
+              variant="outlined" 
+              color="error" 
+              startIcon={<DeleteForeverIcon />}
+              onClick={() => {
+                setDeleteConfirmation('');
+                setOpenDeleteDialog(true);
+              }}
+            >
+              Delete Business
+            </Button>
+          </Box>
+        </Paper>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog 
+        open={openDeleteDialog} 
+        onClose={() => setOpenDeleteDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ color: '#c22222ff', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WarningIcon /> Delete Business Permanently?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 3 }}>
+            This action creates an <strong>atomic deletion</strong> of your entire tenant. 
+            All products, transaction history, and employee accounts will be wiped from the database immediately.
+            <br /><br />
+            Please type <strong>delete</strong> to confirm.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            fullWidth
+            variant="outlined"
+            placeholder="Type 'delete' to confirm"
+            value={deleteConfirmation}
+            onChange={(e) => setDeleteConfirmation(e.target.value)}
+            error={deleteConfirmation.length > 0 && deleteConfirmation.toLowerCase() !== 'delete'}
+            color="error"
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button onClick={() => setOpenDeleteDialog(false)} color="inherit">
+            Cancel
+          </Button>
+          <Button 
+            variant="contained" 
+            color="error"
+            disabled={deleteConfirmation.toLowerCase() !== 'delete' || isDeleting}
+            onClick={handleDeleteBusiness}
+            startIcon={isDeleting ? <CircularProgress size={20} color="inherit" /> : <DeleteForeverIcon />}
+          >
+            {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
