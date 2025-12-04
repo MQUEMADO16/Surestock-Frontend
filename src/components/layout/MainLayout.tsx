@@ -29,14 +29,9 @@ const MainLayout = () => {
     { text: 'Inventory', icon: <InventoryIcon />, path: '/inventory' },
     { text: 'Sales', icon: <SalesIcon />, path: '/checkout' },
     { text: 'Reports', icon: <ReportsIcon />, path: '/reports' },
+    { text: 'Team', icon: <TeamIcon />, path: '/team' },
+    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }
   ];
-
-  if (user?.role === 'OWNER') {
-    menuItems.push(
-      { text: 'Team', icon: <TeamIcon />, path: '/team' },
-      { text: 'Settings', icon: <SettingsIcon />, path: '/settings' }
-    );
-  }
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -61,7 +56,7 @@ const MainLayout = () => {
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: '#284B66', // Deep Blue
+          backgroundColor: '#1d5176ff', // Deep Blue
           boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)', // Adds depth/shadow below header
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)' // Subtle divider
         }}
@@ -96,7 +91,7 @@ const MainLayout = () => {
                   boxShadow: '0 2px 5px rgba(0,0,0,0.3)' // Pop the avatar
                 }}
               >
-                {user?.email[0].toUpperCase()}
+                {user?.email?.[0].toUpperCase()}
               </Avatar>
             </IconButton>
             <Menu
