@@ -7,7 +7,6 @@ import {
 } from '@mui/material';
 import { 
   Add as AddIcon, 
-  Edit as EditIcon, 
   Delete as DeleteIcon,
   Security as SecurityIcon,
   Badge as BadgeIcon,
@@ -196,11 +195,6 @@ const Team = () => {
                 {/* Only Owners see actions */}
                 {isOwner && (
                   <CardActions sx={{ justifyContent: 'flex-end', bgcolor: '#fafafa', borderTop: '1px solid #eee' }}>
-                    <Tooltip title="Edit Member">
-                      <IconButton size="small">
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
                     <Tooltip title="Remove Member">
                       <IconButton 
                         size="small" 
