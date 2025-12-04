@@ -6,11 +6,11 @@ const theme = createTheme({
       // A professional, steel-blue tone.
       main: '#3E6B8E', 
       light: '#6E98BF', // Lighter variant for hovers/accents
-      dark: '#284B66',  // Darker variant for active states
+      dark: '#285c81ff',  // Darker variant for active states
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#E57373', // Softer red/pink for secondary actions or alerts (like the "Low Stock" highlight)
+      main: '#c22222ff', // Softer red for secondary actions or alerts (like the "Low Stock" highlight)
     },
     background: {
       default: '#F4F6F8', // The light grey background seen in dashboard apps
@@ -36,7 +36,7 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: '#284B66', // Uses the darker variant for the header to ground the page
+          backgroundColor: '#285c81ff', // Uses the darker variant for the header to ground the page
           boxShadow: 'none',
         },
       },
