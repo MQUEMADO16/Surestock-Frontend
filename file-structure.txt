@@ -1,0 +1,33 @@
+src/
+├── assets/                 # Images, static files
+├── components/             # Reusable UI components
+│   ├── Layout/             # The main shell components
+│   │   ├── Sidebar.tsx
+│   │   ├── TopBar.tsx
+│   │   └── MainLayout.tsx  # Wraps the authenticated routes
+│   ├── Common/             # Generic widgets
+│   │   ├── StatCard.tsx    # For dashboard metrics
+│   │   └── DataTable.tsx   # Reusable MUI DataGrid wrapper
+│   └── Auth/               # Login/Register forms
+├── context/                # Global State
+│   └── AuthContext.tsx     # Handles login state, user info, logout
+├── pages/                  # Main Page Views
+│   ├── Login.tsx
+│   ├── Dashboard.tsx       # Overview widgets
+│   ├── Inventory.tsx       # Product Table + Edit Modal
+│   ├── Checkout.tsx        # Sales Transaction form
+│   ├── Reports.tsx         # Analytics charts/tables
+│   ├── Team.tsx            # Employee management
+│   └── Settings.tsx        # Business config form
+├── services/               # API Communication (Axios)
+│   ├── api.ts              # Axios instance configuration
+│   ├── authService.ts
+│   ├── productService.ts
+│   ├── salesService.ts
+│   └── reportService.ts
+├── types/                  # TypeScript Interfaces (mirroring Backend DTOs)
+│   ├── product.ts
+│   ├── user.ts
+│   └── transaction.ts
+├── App.tsx                 # Main Router setup
+└── index.tsx               # Entry point
