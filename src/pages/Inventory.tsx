@@ -16,7 +16,7 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
-import { Product, Business } from '../types/models';
+import { Product } from '../types/models';
 import { CreateProductRequest, UpdateProductDetailsRequest } from '../types/payloads';
 import productService from '../services/productService';
 import businessService from '../services/businessService';
@@ -28,6 +28,10 @@ const Inventory = () => {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [defaultThreshold, setDefaultThreshold] = useState<number>(5);
+  const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: 'asc' | 'desc' | null }>({
+    key: null,
+    direction: null
+  });
 
   // Dialog States
   const [openProductDialog, setOpenProductDialog] = useState(false);
@@ -118,6 +122,14 @@ const Inventory = () => {
     }
   };
 
+  const handleSort = (key: string) => {
+    setSortConfig(prev => {
+      if (prev.key !== key) return { key, direction: 'asc' };
+      if (prev.direction === 'asc') return { key, direction: 'desc' };
+      return { key: null, direction: null }; // reset
+    });
+  };
+
   const submitProductForm = async () => {
     try {
       setDialogLoading(true);
@@ -165,8 +177,53 @@ const Inventory = () => {
       setDialogLoading(false);
     }
   };
-  
-  const isLowStock = (p: Product) => p.quantity <= p.reorderThreshold;
+
+  const getStatus = (p: Product) => p.quantity <= p.reorderThreshold;
+
+  const sortedProducts = React.useMemo(() => {
+    const { key, direction } = sortConfig;
+    if (!key || !direction) return filteredProducts;
+
+    return [...filteredProducts].sort((a, b) => {
+      // special-case status
+      if (key === 'status') {
+        const aIsLow = getStatus(a);
+        const bIsLow = getStatus(b);
+
+        if (aIsLow === bIsLow) return 0;
+        return direction === 'asc' ? (aIsLow ? 1 : -1) : (aIsLow ? -1 : 1);
+      }
+
+      // default: index the Product field
+      const valA = a[key as keyof Product];
+      const valB = b[key as keyof Product];
+
+      if (valA == null && valB == null) return 0;
+      if (valA == null) return direction === 'asc' ? -1 : 1;
+      if (valB == null) return direction === 'asc' ? 1 : -1;
+
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        return direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+
+      if (valA < valB) return direction === 'asc' ? -1 : 1;
+      if (valA > valB) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredProducts, sortConfig]);
+
+  const renderSortIndicator = (column: string) => {
+    if (sortConfig.key !== column) return null;
+    if (sortConfig.direction === 'asc') return " ▲";
+    if (sortConfig.direction === 'desc') return " ▼";
+    return null;
+  };
+
+  const iconStyle: React.CSSProperties = {
+    display: 'inline-block',
+    width: '1ch',     // reserve space for ▲ or ▼ (or empty)
+    textAlign: 'center'
+  };
 
   return (
     <Box>
@@ -204,14 +261,41 @@ const Inventory = () => {
       {/* Products Table */}
       <TableContainer component={Paper} elevation={2}>
         <Table sx={{ minWidth: 650 }}>
-          <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+          <TableHead>
             <TableRow>
-              <TableCell align="left"><strong>Product Name</strong></TableCell>
-              <TableCell align="center"><strong>SKU</strong></TableCell>
-              <TableCell align="center"><strong>Price</strong></TableCell>
-              <TableCell align="center"><strong>Quantity</strong></TableCell>
-              <TableCell align="center"><strong>Status</strong></TableCell>
-              <TableCell align="center"><strong>Actions</strong></TableCell>
+              <TableCell align="left" onClick={() => handleSort('name')} sx={{ cursor: 'pointer' }}>
+                <strong>
+                  Product Name
+                  <span style={iconStyle}>{renderSortIndicator('name')}</span>
+                </strong>
+              </TableCell>
+              <TableCell align="center" onClick={() => handleSort('sku')} sx={{ cursor: 'pointer' }}>
+                <strong>
+                  SKU
+                  <span style={iconStyle}>{renderSortIndicator('sku')}</span>
+                </strong>
+              </TableCell>
+              <TableCell align="center" onClick={() => handleSort('price')} sx={{ cursor: 'pointer' }}>
+                <strong>
+                  Price
+                  <span style={iconStyle}>{renderSortIndicator('price')}</span>
+                </strong>
+              </TableCell>
+              <TableCell align="center" onClick={() => handleSort('quantity')} sx={{ cursor: 'pointer' }}>
+                <strong>
+                  Quantity
+                  <span style={iconStyle}>{renderSortIndicator('quantity')}</span>
+                </strong>
+              </TableCell>
+              <TableCell align="center" onClick={() => handleSort('status')} sx={{ cursor: 'pointer' }}>
+                <strong>
+                  Status
+                  <span style={iconStyle}>{renderSortIndicator('status')}</span>
+                </strong>
+              </TableCell>
+              <TableCell align="center">
+                <strong>Actions</strong>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -228,7 +312,7 @@ const Inventory = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredProducts.map((product) => (
+              sortedProducts.map((product) => (
                 <TableRow key={product.id} hover>
                   <TableCell align="left">
                     <Typography variant="body1" fontWeight="500">{product.name}</Typography>
@@ -239,13 +323,13 @@ const Inventory = () => {
                   <TableCell align="center">${product.price.toFixed(2)}</TableCell>
                   <TableCell align="center">
                     <Typography 
-                      color={isLowStock(product) ? 'error.main' : 'text.primary'}
+                      color={getStatus(product) ? 'error.main' : 'text.primary'}
                     >
                       {product.quantity}
                     </Typography>
                   </TableCell>
                   <TableCell align="center">
-                    {isLowStock(product) ? (
+                    {getStatus(product) ? (
                       <Chip icon={<WarningIcon />} label="Low Stock" color="error" size="small" />
                     ) : (
                       <Chip label="In Stock" color="success" size="small" variant="outlined" />
