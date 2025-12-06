@@ -34,10 +34,8 @@ const Inventory = () => {
   const [openStockDialog, setOpenStockDialog] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
   
-  // Selected Item State (for Edit/Stock Update)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
-  // Form Data State
   const [productForm, setProductForm] = useState<CreateProductRequest>({
     name: '', sku: '', price: 0, cost: 0, quantity: 0, reorderThreshold: 5
   });
@@ -45,7 +43,6 @@ const Inventory = () => {
 
   const isOwner = user?.role === 'OWNER';
 
-  // --- Data Loading ---
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
@@ -74,13 +71,10 @@ const Inventory = () => {
     loadData();
   }, [loadData]);
 
-  // --- Search Logic ---
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     p.sku.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // --- Handlers ---
 
   const handleOpenCreate = () => {
     setSelectedProduct(null);
@@ -171,8 +165,7 @@ const Inventory = () => {
       setDialogLoading(false);
     }
   };
-
-  // --- Render Helpers ---
+  
   const isLowStock = (p: Product) => p.quantity <= p.reorderThreshold;
 
   return (

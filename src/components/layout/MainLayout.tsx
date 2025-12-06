@@ -56,7 +56,7 @@ const MainLayout = () => {
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: '#004d85ff', // Deep Blue
+          backgroundColor: '#1d407c', // Deep Blue
           boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)', // Adds depth/shadow below header
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)' // Subtle divider
         }}
