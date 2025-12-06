@@ -261,39 +261,44 @@ const Inventory = () => {
       {/* Products Table */}
       <TableContainer component={Paper} elevation={2}>
         <Table sx={{ minWidth: 650 }}>
-          <TableHead>
+          <TableHead sx={{
+            cursor: 'pointer',
+            backgroundColor: '#f0f0f0',
+            fontWeight: 'bold',
+            userSelect: 'none',
+          }}>
             <TableRow>
-              <TableCell align="left" onClick={() => handleSort('name')} sx={{ cursor: 'pointer' }}>
+              <TableCell align="left" onClick={() => handleSort('name')} sx={{ cursor: 'pointer', width: '16%' }}>
                 <strong>
                   Product Name
                   <span style={iconStyle}>{renderSortIndicator('name')}</span>
                 </strong>
               </TableCell>
-              <TableCell align="center" onClick={() => handleSort('sku')} sx={{ cursor: 'pointer' }}>
+              <TableCell align="center" onClick={() => handleSort('sku')} sx={{ cursor: 'pointer', width: '20%' }}>
                 <strong>
                   SKU
                   <span style={iconStyle}>{renderSortIndicator('sku')}</span>
                 </strong>
               </TableCell>
-              <TableCell align="center" onClick={() => handleSort('price')} sx={{ cursor: 'pointer' }}>
+              <TableCell align="center" onClick={() => handleSort('price')} sx={{ cursor: 'pointer', width: '10%' }}>
                 <strong>
                   Price
                   <span style={iconStyle}>{renderSortIndicator('price')}</span>
                 </strong>
               </TableCell>
-              <TableCell align="center" onClick={() => handleSort('quantity')} sx={{ cursor: 'pointer' }}>
+              <TableCell align="center" onClick={() => handleSort('quantity')} sx={{ cursor: 'pointer', width: '10%'  }}>
                 <strong>
                   Quantity
                   <span style={iconStyle}>{renderSortIndicator('quantity')}</span>
                 </strong>
               </TableCell>
-              <TableCell align="center" onClick={() => handleSort('status')} sx={{ cursor: 'pointer' }}>
+              <TableCell align="center" onClick={() => handleSort('status')} sx={{ cursor: 'pointer', width: '10%'  }}>
                 <strong>
                   Status
                   <span style={iconStyle}>{renderSortIndicator('status')}</span>
                 </strong>
               </TableCell>
-              <TableCell align="center">
+              <TableCell align="center" sx={{ cursor: 'pointer', width: '15%' }}>
                 <strong>Actions</strong>
               </TableCell>
             </TableRow>
