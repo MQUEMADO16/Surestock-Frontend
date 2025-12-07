@@ -36,6 +36,15 @@ export interface SalesTransaction {
   timestamp: string; // ISO Date String
 }
 
+export interface TransactionResponse {
+  id: number;
+  timestamp: string;
+  quantity: number;
+  totalPrice: number;
+  productName: string;
+  productSku: string;
+}
+
 export interface ReportResult {
   reportType: string;
   businessId: number;

@@ -1,6 +1,6 @@
 import api from './api';
 import { SaleRequest } from '../types/payloads';
-import { SalesTransaction } from '../types/models';
+import { SalesTransaction, TransactionResponse } from '../types/models';
 
 const transactionService = {
   // Process a sale (Checkout)
@@ -9,7 +9,7 @@ const transactionService = {
   },
 
   getHistory: async () => {
-    var history = api.get<SalesTransaction[]>('/transactions');
+    var history = api.get<TransactionResponse[]>('/transactions');
     console.log(history);
     return history;
   }

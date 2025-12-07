@@ -3,7 +3,8 @@ import {
   Box, Typography, Paper, Button, TextField, InputAdornment, 
   IconButton, Grid, Card, CardContent, List, ListItem, 
   ListItemText, Divider, Chip, Alert, CircularProgress, 
-  Tabs, Tab
+  Tabs, Tab, Table, TableBody, TableCell, TableContainer, 
+  TableHead, TableRow
 } from '@mui/material';
 import { 
   Search as SearchIcon, 
@@ -23,7 +24,7 @@ import transactionService from '../services/transactionService';
 import businessService from '../services/businessService';
 
 // Import Types
-import { Product, SalesTransaction, Business } from '../types/models';
+import { Product, TransactionResponse, Business } from '../types/models';
 import { SaleRequest } from '../types/payloads';
 
 // --- Types for Local State ---
@@ -61,7 +62,8 @@ const Checkout = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [history, setHistory] = useState<SalesTransaction[]>([]); // Placeholder for history
+  const [history, setHistory] = useState<TransactionResponse[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [settings, setSettings] = useState<Business | null>(null);
   
   const [loading, setLoading] = useState(true);
@@ -87,6 +89,23 @@ const Checkout = () => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 1) {
+      const fetchHistory = async () => {
+          setHistoryLoading(true);
+          try {
+              const res = await transactionService.getHistory();
+              setHistory(res.data);
+          } catch (err) {
+              console.error("Failed to load history", err);
+          } finally {
+              setHistoryLoading(false);
+          }
+      };
+      fetchHistory();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     loadData();
@@ -376,18 +395,53 @@ const Checkout = () => {
 
       {/* --- TAB 2: HISTORY (Placeholder for now) --- */}
       <CustomTabPanel value={activeTab} index={1}>
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            Transaction History
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            This feature will display a sortable table of past transactions.
-            <br />
-            (Backend endpoint integration required)
-          </Typography>
+        <Paper elevation={2}>
+          <TableContainer>
+            <Table>
+              <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+                <TableRow>
+                  <TableCell><strong>ID</strong></TableCell>
+                  <TableCell align="center"><strong>Date & Time</strong></TableCell>
+                  <TableCell align="center"><strong>Product Sold (SKU)</strong></TableCell>
+                  <TableCell align="center"><strong>Quantity</strong></TableCell>
+                  <TableCell align="center"><strong>Sale Total</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historyLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}><CircularProgress /></TableCell>
+                  </TableRow>
+                ) : history.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ py: 3, color: 'text.secondary' }}>No sales history found.</TableCell>
+                  </TableRow>
+                ) : (
+                  history.map((tx) => (
+                    <TableRow key={tx.id} hover>
+                      <TableCell>#{tx.id}</TableCell>
+                      <TableCell align="center">
+                        {new Date(tx.timestamp).toLocaleString()}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box>
+                          <Chip label={tx.productSku} size="small" variant="outlined" sx={{ fontFamily: 'monospace' }} />
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        {tx.quantity}
+                      </TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>
+                        ${tx.totalPrice.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Paper>
       </CustomTabPanel>
-
     </Box>
   );
 };
