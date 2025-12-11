@@ -194,12 +194,12 @@ const Checkout = () => {
     <Box sx={{ height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column' }}>
       
       {/* Page Header & Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2 }}>
+      <Paper elevation={0} sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'transparent', mb: 3 }}>
         <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
           <Tab icon={<StoreIcon />} iconPosition="start" label="New Sale" />
           <Tab icon={<HistoryIcon />} iconPosition="start" label="History" />
         </Tabs>
-      </Box>
+      </Paper>
 
       {/* Feedback Messages */}
       {(error || successMsg) && (
