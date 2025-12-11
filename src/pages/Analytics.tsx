@@ -209,7 +209,7 @@ export default function Analytics() {
             <XAxis dataKey="date" tick={{fontSize: 12}} />
             <YAxis />
             <Tooltip formatter={(val: number) => `$${val.toFixed(2)}`} />
-            <Line type="linear" dataKey="revenue" stroke={theme.palette.success.main} strokeWidth={3} dot={{r:3}} />
+            <Line type="linear" dataKey="revenue" stroke={'#0088FE'} strokeWidth={3} dot={{r:3}} />
           </LineChart>
         </ResponsiveContainer>
       );
@@ -315,7 +315,7 @@ export default function Analytics() {
             </Widget>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Widget title="Dead Stock (No sales 30d)" summary={reportCache[ReportType.DEAD_STOCK].summary} height={400}>
+            <Widget title="Dead Stock (No Sales 30d)" summary={reportCache[ReportType.DEAD_STOCK].summary} height={400}>
               {renderContent(ReportType.DEAD_STOCK)}
             </Widget>
           </Grid>

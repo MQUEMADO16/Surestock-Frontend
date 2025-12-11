@@ -4,7 +4,7 @@ const theme = createTheme({
   palette: {
     primary: {
       // A professional, steel-blue tone.
-      main: '#2d83c5ff', 
+      main: '#0088FE', 
       light: '#62aaeeff', // Lighter variant for hovers/accents
       dark: '#1d407c',  // Darker variant for active states
       contrastText: '#ffffff',

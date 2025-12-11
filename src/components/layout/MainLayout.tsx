@@ -56,14 +56,14 @@ const MainLayout = () => {
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: '#1d407c', // Deep Blue
+          backgroundColor: '#ffffff', // Deep Blue
           boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)', // Adds depth/shadow below header
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)' // Subtle divider
         }}
       >
         <Toolbar>
           <Typography 
-            variant="h6" 
+            variant="h5" 
             noWrap 
             component="div" 
             sx={{ 
@@ -74,6 +74,9 @@ const MainLayout = () => {
               letterSpacing: '0.5px'
             }}
             ml='10px'
+            color='#1d407c'
+            mt='5px'
+            marginLeft='10px'
           >
             SureStock
           </Typography>

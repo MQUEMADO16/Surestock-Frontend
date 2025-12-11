@@ -28,6 +28,7 @@ import {
   AddShoppingCart, 
   PostAdd,
 } from '@mui/icons-material';
+import { alpha } from '@mui/material';
 import { 
   AreaChart, 
   Area, 
@@ -68,7 +69,15 @@ const KpiCard = ({ title, value, icon, color, loading }: { title: string, value:
             </Typography>
           )}
         </Box>
-        <Avatar variant="rounded" sx={{ bgcolor: `${color}15`, color: color }}>
+        <Avatar 
+          variant="rounded" 
+          sx={{ 
+            bgcolor: alpha(color, 0.1), 
+            color: color,
+            width: 48, 
+            height: 48 
+          }}
+        >
           {icon}
         </Avatar>
       </Box>
@@ -180,7 +189,7 @@ export default function Dashboard() {
           <KpiCard 
             title="Inventory Value" 
             value={`$${metrics.inventoryValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`} 
-            icon={<Inventory />} 
+            icon={<Inventory /> } 
             color={theme.palette.primary.main}
             loading={loading}
           />
@@ -210,8 +219,8 @@ export default function Dashboard() {
                     <AreaChart data={salesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={theme.palette.success.main} stopOpacity={0.1}/>
-                          <stop offset="95%" stopColor={theme.palette.success.main} stopOpacity={0}/>
+                          <stop offset="5%" stopColor={'#0088FE'} stopOpacity={0.1}/>
+                          <stop offset="95%" stopColor={'#0088FE'} stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
@@ -224,7 +233,7 @@ export default function Dashboard() {
                       <Area 
                         type="linear" 
                         dataKey="revenue" 
-                        stroke={theme.palette.success.main} 
+                        stroke={'#0088FE'} 
                         strokeWidth={3}
                         fillOpacity={1} 
                         fill="url(#colorRevenue)" 
