@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Box, CssBaseline, AppBar, Toolbar, Typography, Drawer, List, 
-  ListItem, ListItemButton, ListItemIcon, ListItemText, IconButton, Avatar, Menu, MenuItem, Divider 
+  ListItem, ListItemButton, ListItemIcon, ListItemText, IconButton, Avatar, Menu, MenuItem, Divider
 } from '@mui/material';
 import { 
   Dashboard as DashboardIcon, 
@@ -15,7 +15,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
-const drawerWidth = 240;
+const drawerWidth = 260;
 
 const MainLayout = () => {
   const { user, logout } = useAuth();
@@ -51,34 +51,108 @@ const MainLayout = () => {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       
-      {/* Top App Bar with Depth */}
-      <AppBar 
-        position="fixed" 
-        sx={{ 
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: '#ffffff', // SaaS White Header
-          color: '#1F2937', // Dark Text
-          boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.05)', // Very subtle shadow
-          borderBottom: '1px solid #E5E7EB' // Divider
+      {/* SIDEBAR (Full Height, Fixed) */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          [`& .MuiDrawer-paper`]: { 
+            width: drawerWidth, 
+            boxSizing: 'border-box',
+            borderRight: '1px solid #E5E7EB',
+            backgroundColor: '#FFFFFF', // Clean white sidebar
+          },
         }}
       >
-        <Toolbar>
+        {/* Logo Area */}
+        <Box sx={{ 
+          height: 64, // Matches standard toolbar height
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          px: 2
+        }}>
           <Typography 
             variant="h5" 
             noWrap 
             component="div" 
             sx={{ 
-              flexGrow: 1, 
-              display: 'flex', 
-              alignItems: 'center', 
-              fontWeight: 700, 
+              fontWeight: 800, 
               letterSpacing: '-0.5px',
-              color: '#0088FE' // Brand Primary Color for Logo
+              color: '#0088FE', // Brand Primary
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
             }}
           >
             SureStock
           </Typography>
+        </Box>
+
+        <Divider sx={{ mb: 2, mx: 4, color: '#000000' }} variant='middle' />
+
+        {/* Navigation Items */}
+        <Box sx={{ overflow: 'auto', px: 2 }}>
+          <List>
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
+                  <ListItemButton 
+                    selected={isActive}
+                    onClick={() => navigate(item.path)}
+                    sx={{
+                      borderRadius: 2,
+                      minHeight: 48,
+                      color: isActive ? '#0088FE' : '#6B7280', 
+                      backgroundColor: isActive ? 'rgba(0, 136, 254, 0.08)' : 'transparent',
+                      '&:hover': {
+                        backgroundColor: isActive ? 'rgba(0, 136, 254, 0.12)' : 'rgba(0, 0, 0, 0.04)',
+                        color: isActive ? '#0088FE' : '#111827',
+                      },
+                      justifyContent: 'center', // Centered if collapsed, but we are fixed width
+                    }}
+                  >
+                    <ListItemIcon sx={{ 
+                      color: 'inherit',
+                      minWidth: 40
+                    }}>
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={item.text} 
+                      primaryTypographyProps={{ 
+                        fontWeight: isActive ? 600 : 500,
+                        fontSize: '0.95rem'
+                      }} 
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
+          </List>
+        </Box>
+      </Drawer>
+
+      {/* HEADER (Offset by Drawer Width) */}
+      <AppBar 
+        position="fixed" 
+        sx={{ 
+          width: `calc(100% - ${drawerWidth}px)`, // Offset width
+          ml: `${drawerWidth}px`, // Push to the right
+          backgroundColor: '#FFFFFF', // White header
+          color: '#1F2937', 
+          boxShadow: 'none',
+          borderBottom: '1px solid #E5E7EB' 
+        }}
+      >
+        <Toolbar>
+          {/* Dynamic Page Title */}
+          <Typography variant="h6" fontWeight="600" noWrap component="div" sx={{ flexGrow: 1 }}>
+          </Typography>
           
+          {/* User Profile Menu */}
           <div>
             <IconButton size="large" onClick={handleMenu} color="inherit">
               <Avatar 
@@ -88,7 +162,7 @@ const MainLayout = () => {
                   bgcolor: '#0088FE',
                   fontSize: '0.9rem', 
                   fontWeight: 600,
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)' // Subtle pop
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
                 }}
               >
                 {user?.email?.[0].toUpperCase()}
@@ -125,77 +199,18 @@ const MainLayout = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Sidebar Drawer */}
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { 
-            width: drawerWidth, 
-            boxSizing: 'border-box',
-            borderRight: '1px solid #E5E7EB',
-            backgroundColor: '#FAFAFA', // Light grey sidebar background
-          },
+      {/* MAIN CONTENT (Offset by Drawer Width & Toolbar Height) */}
+      <Box 
+        component="main" 
+        sx={{ 
+          flexGrow: 1, 
+          bgcolor: '#F8FAFC', // Light SaaS background
+          minHeight: '100vh',
+          p: 3,
+          width: `calc(100% - ${drawerWidth}px)`,
         }}
       >
-        <Toolbar /> 
-        <Box sx={{ overflow: 'auto', mt: 3 }}>
-          <List>
-            {menuItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <ListItem key={item.text} disablePadding sx={{ mb: 0.5, px: 1.5 }}>
-                  <ListItemButton 
-                    selected={isActive}
-                    onClick={() => navigate(item.path)}
-                    sx={{
-                      borderRadius: 1.5,
-                      minHeight: 44,
-                      color: isActive ? '#0088FE' : '#4B5563', // Blue active, Dark Grey inactive
-                      backgroundColor: isActive ? 'rgba(0, 136, 254, 0.08)' : 'transparent', // Light blue bg active
-                      '&:hover': {
-                        backgroundColor: isActive ? 'rgba(0, 136, 254, 0.12)' : 'rgba(0, 0, 0, 0.04)',
-                        color: isActive ? '#0088FE' : '#111827',
-                      },
-                      // Left accent border for active state
-                      position: 'relative',
-                      '&::before': isActive ? {
-                        content: '""',
-                        position: 'absolute',
-                        left: -6, // Push slightly outside padding
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        height: '20px',
-                        width: '3px',
-                        backgroundColor: '#0088FE',
-                        borderRadius: '0 4px 4px 0',
-                      } : {},
-                    }}
-                  >
-                    <ListItemIcon sx={{ 
-                      color: 'inherit',
-                      minWidth: 40
-                    }}>
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={item.text} 
-                      primaryTypographyProps={{ 
-                        fontWeight: isActive ? 600 : 500,
-                        fontSize: '0.95rem'
-                      }} 
-                    />
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-          </List>
-        </Box>
-      </Drawer>
-
-      <Box component="main" sx={{ flexGrow: 1, p: 4, bgcolor: '#F8FAFC', minHeight: '100vh' }}>
-        <Toolbar /> 
+        <Toolbar /> {/* Spacer for the fixed AppBar */}
         <Outlet />
       </Box>
     </Box>
