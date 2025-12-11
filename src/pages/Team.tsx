@@ -3,17 +3,16 @@ import {
   Box, Typography, Paper, Button, Grid, Avatar, Chip, IconButton, 
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, 
   CircularProgress, Alert, Card, CardContent, CardActions, Tooltip, Divider,
-  InputAdornment
+  InputAdornment, useTheme
 } from '@mui/material';
 import { 
   Add as AddIcon, 
   Delete as DeleteIcon,
   Security as SecurityIcon,
-  Badge as BadgeIcon,
   Email as EmailIcon,
   Lock as LockIcon,
   Visibility,
-  VisibilityOff
+  VisibilityOff,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { User } from '../types/models';
@@ -22,6 +21,8 @@ import userService from '../services/userService';
 
 const Team = () => {
   const { user: currentUser } = useAuth();
+  const theme = useTheme();
+  
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -53,18 +54,15 @@ const Team = () => {
   }, [loadUsers]);
 
   const handleAddMember = async () => {
-    if (!newUserEmail || !newUserPassword) return; // Ensure both fields are filled
+    if (!newUserEmail || !newUserPassword) return;
     try {
       setDialogLoading(true);
-      
       const payload: CreateEmployeeRequest = {
         email: newUserEmail,
         password: newUserPassword 
       };
-
       await userService.createEmployee(payload);
-      await loadUsers(); // Refresh list
-      
+      await loadUsers();
       handleCloseDialog();
     } catch (err) {
       console.error(err);
@@ -78,13 +76,7 @@ const Team = () => {
     setOpenDialog(false);
     setNewUserEmail('');
     setNewUserPassword('');
-    setShowPassword(false); // Reset visibility state
-  };
-
-  const handleClickShowPassword = () => setShowPassword((show) => !show);
-
-  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
+    setShowPassword(false);
   };
 
   const handleDelete = async (id: number) => {
@@ -101,124 +93,113 @@ const Team = () => {
 
   if (loading) return <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}><CircularProgress /></Box>;
 
-  // Filter users based on role
   const owner = users.find(u => u.role === 'OWNER');
   const employees = users.filter(u => u.role === 'EMPLOYEE');
 
   return (
-    <Box>
+    <Box sx={{ p: 3, maxWidth: 1600, margin: '0 auto' }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight="600">Team Overview</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" fontWeight="bold" gutterBottom>Team</Typography>
+          <Typography variant="body2" color="text.secondary">Manage access and roles for your organization.</Typography>
+        </Box>
         {isOwner && (
           <Button 
             variant="contained" 
             startIcon={<AddIcon />} 
             onClick={() => setOpenDialog(true)}
+            disableElevation
           >
-            Add Employee
+            Add Member
           </Button>
         )}
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-      {/* Leadership Section */}
-      <Typography variant="h6" gutterBottom sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <SecurityIcon color="primary" /> Leadership
-      </Typography>
-      <Divider sx={{ mb: 3 }} />
-
+      {/* Owner Card */}
       {owner && (
-        <Paper 
-          elevation={3} 
-          sx={{ 
-            p: 3, 
-            mb: 4, 
-            borderLeft: '6px solid #1976d2',
-            display: 'flex', 
-            alignItems: 'center',
-            gap: 3,
-            background: 'linear-gradient(to right, #f5faff, #ffffff)'
-          }}
-        >
-          <Avatar 
-            sx={{ width: 64, height: 64, bgcolor: '#1976d2', fontSize: '2rem', }}
-          >
-            {owner.email.charAt(0).toUpperCase()}
-          </Avatar>
-          <Box>
-            <Typography variant="h5" fontWeight="500">Business Owner</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, color: 'text.secondary' }}>
-              <EmailIcon fontSize="small"/>
-              <Typography variant="body1">{owner.email}</Typography>
-              <Chip label="OWNER" size="small" color="primary" sx={{ ml: 1, fontWeight: 'bold' }} />
-            </Box>
-          </Box>
-        </Paper>
+        <Box mb={4}>
+          <Typography variant="subtitle2" fontWeight="600" color="text.secondary" gutterBottom sx={{ ml: 1, mb: 2 }}>
+            ADMINISTRATORS
+          </Typography>
+          <Card variant="outlined">
+            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
+              <Avatar sx={{ bgcolor: theme.palette.primary.main, width: 48, height: 48 }}>
+                {owner.email.charAt(0).toUpperCase()}
+              </Avatar>
+              <Box flexGrow={1}>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="subtitle1" fontWeight="600">{owner.email}</Typography>
+                  <Chip label="OWNER" size="small" color="primary" sx={{ height: 20, fontSize: '0.7rem', fontWeight: 'bold' }} />
+                </Box>
+                <Typography variant="body2" color="text.secondary">Full access to all settings and data.</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
       )}
 
-      {/* Employees Section */}
-      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <BadgeIcon color="action" /> Team Members ({employees.length})
-      </Typography>
-      <Divider sx={{ mb: 3 }} />
-      
-      {employees.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center', bgcolor: '#fafafa' }}>
-          <Typography color="text.secondary">No employees found. Add members to your team.</Typography>
-        </Paper>
-      ) : (
-        <Grid container spacing={3}>
-          {employees.map((employee) => (
-            <Grid size={{xs: 12, md: 6, lg: 4}} key={employee.id}>
-              <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Avatar sx={{ bgcolor: 'orange' }}>
-                        {employee.email.charAt(0).toUpperCase()}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight="bold" noWrap>
+      {/* Employees Grid */}
+      <Box>
+        <Typography variant="subtitle2" fontWeight="600" color="text.secondary" gutterBottom sx={{ ml: 1, mb: 2 }}>
+          MEMBERS ({employees.length})
+        </Typography>
+        
+        {employees.length === 0 ? (
+          <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', bgcolor: '#fafafa', borderStyle: 'dashed' }}>
+            <Typography color="text.secondary">No team members yet.</Typography>
+          </Paper>
+        ) : (
+          <Grid container spacing={3}>
+            {employees.map((employee) => (
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={employee.id}>
+                <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <CardContent sx={{ flexGrow: 1, pt: 3 }}>
+                    <Box display="flex" flexDirection="column" alignItems="center" textAlign="center">
+                      <Avatar sx={{ bgcolor: theme.palette.secondary.main, width: 56, height: 56, mb: 2, fontSize: '1.25rem' }}>
+                          {employee.email.charAt(0).toUpperCase()}
+                      </Avatar>
+                      <Typography variant="subtitle1" fontWeight="600" noWrap sx={{ width: '100%' }}>
                         {employee.email.split('@')[0]}
                       </Typography>
-                      <Chip label="EMPLOYEE" size="small" variant="outlined" sx={{ fontSize: '0.7rem', height: 20 }} />
+                      <Typography variant="body2" color="text.secondary" noWrap sx={{ width: '100%', mb: 1 }}>
+                        {employee.email}
+                      </Typography>
+                      <Chip label="EMPLOYEE" size="small" variant="outlined" sx={{ height: 20, fontSize: '0.65rem' }} />
                     </Box>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 1 }}>
-                    <EmailIcon fontSize="small" sx={{ opacity: 0.7 }} />
-                    <Typography variant="body2" noWrap>{employee.email}</Typography>
-                  </Box>
-                </CardContent>
+                  </CardContent>
 
-                {/* Only Owners see actions */}
-                {isOwner && (
-                  <CardActions sx={{ justifyContent: 'flex-end', bgcolor: '#fafafa', borderTop: '1px solid #eee' }}>
-                    <Tooltip title="Remove Member">
-                      <IconButton 
-                        size="small" 
-                        color="error" 
-                        onClick={() => handleDelete(employee.id)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </CardActions>
-                )}
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
+                  {isOwner && (
+                    <>
+                      <Divider />
+                      <CardActions sx={{ justifyContent: 'center', bgcolor: '#FAFAFA' }}>
+                        <Button 
+                          size="small" 
+                          color="error" 
+                          startIcon={<DeleteIcon fontSize="small" />}
+                          onClick={() => handleDelete(employee.id)}
+                        >
+                          Remove
+                        </Button>
+                      </CardActions>
+                    </>
+                  )}
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Box>
 
       {/* Add Member Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="xs" fullWidth>
-        <DialogTitle>Add New Employee</DialogTitle>
+        <DialogTitle>Add New Member</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Alert severity="info">
-              Enter the credentials for the new employee.
+            <Alert severity="info" icon={<SecurityIcon fontSize="inherit" />}>
+              New members will have access to Inventory and Sales immediately.
             </Alert>
             <TextField
               label="Email Address"
@@ -238,34 +219,33 @@ const Team = () => {
               type={showPassword ? 'text' : 'password'}
               value={newUserPassword}
               onChange={(e) => setNewUserPassword(e.target.value)}
-              slotProps={{
-                input: {
-                  startAdornment: <InputAdornment position="start"><LockIcon color="action" /></InputAdornment>,
-                  endAdornment: (
+              InputProps={{
+                startAdornment: <InputAdornment position="start"><LockIcon color="action" /></InputAdornment>,
+                endAdornment: (
                   <InputAdornment position="end">
                     <Tooltip title={showPassword ? 'Hide' : 'Show'}>
                       <IconButton
                         aria-label="toggle password visibility"
-                        onClick={handleClickShowPassword}
-                        onMouseDown={handleMouseDownPassword}
+                        onClick={() => setShowPassword(!showPassword)}
+                        onMouseDown={(e) => e.preventDefault()}
                         edge="end"
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </Tooltip>
                   </InputAdornment>
-                  )
-                }
+                )
               }}
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={handleCloseDialog} color="inherit">Cancel</Button>
           <Button 
             variant="contained" 
             onClick={handleAddMember} 
             disabled={!newUserEmail || !newUserPassword || dialogLoading}
+            disableElevation
           >
             {dialogLoading ? 'Adding...' : 'Add Member'}
           </Button>

@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Box, Typography, Paper, TextField, Button, Grid, Divider, Alert, 
+  Box, Typography, TextField, Button, Grid, Divider, Alert, 
   CircularProgress, InputAdornment, Dialog, DialogTitle, DialogContent, 
-  DialogContentText, DialogActions
+  DialogContentText, DialogActions, Card, CardContent, CardHeader, useTheme
 } from '@mui/material';
 import { 
   Edit as EditIcon, 
   Save as SaveIcon, 
-  Cancel as CancelIcon,
   Store as StoreIcon,
   AttachMoney as CurrencyIcon,
   LocationOn as LocationIcon,
@@ -24,22 +23,20 @@ import { useNavigate } from 'react-router-dom';
 import userService from '../services/userService';
 
 const Settings = () => {
-  const { user, logout } = useAuth(); // Assuming logout is available in AuthContext
+  const { user, logout } = useAuth();
+  const theme = useTheme();
   const navigate = useNavigate();
+  
   const [settings, setSettings] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   
-  // Edit Mode State
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Delete Dialog State
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Typed form data based on your Payloads.ts
   const [formData, setFormData] = useState<BusinessSettingsUpdate>({
     name: '',
     currency: '',
@@ -50,7 +47,6 @@ const Settings = () => {
 
   const isOwner = user?.role === 'OWNER';
 
-  // Initialize form with data from the API
   const initializeForm = useCallback((data: Business) => {
     setFormData({
       name: data.name,
@@ -81,7 +77,6 @@ const Settings = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      // Service call matches the BusinessSettingsUpdate payload structure
       const response = await businessService.updateSettings(formData);
       setSettings(response.data); 
       initializeForm(response.data); 
@@ -108,11 +103,9 @@ const Settings = () => {
 
   const handleDeleteBusiness = async () => {
     if (deleteConfirmation.toLowerCase() !== 'delete') return;
-    
     try {
       setIsDeleting(true);
       await userService.closeAccount();
-      // Logout and redirect to login page after successful deletion
       logout(); 
       navigate('/login'); 
     } catch (err) {
@@ -126,27 +119,30 @@ const Settings = () => {
   if (loading) return <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}><CircularProgress /></Box>;
 
   return (
-    <Box sx={{ pb: 8 }} maxHeight='600px'>
-      {/* Header Section */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight="600">Business Settings</Typography>
+    <Box sx={{ p: 3, maxWidth: 1600, margin: '0 auto' }}>
+      
+      {/* Page Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" fontWeight="bold" gutterBottom>Settings</Typography>
+          <Typography variant="body2" color="text.secondary">Manage your business profile and preferences.</Typography>
+        </Box>
         
         {isOwner && (
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box>
             {!isEditing ? (
               <Button 
-                variant="contained" 
+                variant="outlined" 
                 startIcon={<EditIcon />} 
                 onClick={() => setIsEditing(true)}
               >
                 Edit Settings
               </Button>
             ) : (
-              <>
+              <Box sx={{ display: 'flex', gap: 2 }}>
                 <Button 
-                  variant="outlined" 
+                  variant="text" 
                   color="inherit" 
-                  startIcon={<CancelIcon />} 
                   onClick={handleCancel}
                   disabled={saving}
                 >
@@ -160,7 +156,7 @@ const Settings = () => {
                 >
                   Save Changes
                 </Button>
-              </>
+              </Box>
             )}
           </Box>
         )}
@@ -168,211 +164,181 @@ const Settings = () => {
 
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-      <Paper elevation={2} sx={{ p: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          General Information
-        </Typography>
-        <Divider sx={{ mb: 4 }} />
-        
-        {/* Main Grid Container */}
-        <Grid container spacing={3}>
-          
-          {/* Business Name - Now Editable */}
-          <Grid size={{xs: 12, md: 6}}>
-            <TextField
-              label="Business Name"
-              fullWidth
-              value={isEditing ? formData.name : settings?.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              disabled={!isEditing}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <StoreIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
+      {/* Main Settings Card */}
+      <Card variant="outlined" sx={{ mb: 4 }}>
+        <CardHeader 
+          title="General Information" 
+          subheader="Basic details about your store visible on receipts and invoices."
+          titleTypographyProps={{ fontWeight: 600, fontSize: '1.1rem' }}
+        />
+        <Divider />
+        <CardContent sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            {/* Business Name */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                label="Business Name"
+                fullWidth
+                value={isEditing ? formData.name : settings?.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                disabled={!isEditing}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start"><StoreIcon color="action" /></InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
 
-          {/* Contact Address */}
-          <Grid size={{xs: 12, md: 6}}>
-            <TextField
-              label="Contact Address"
-              fullWidth
-              value={isEditing ? formData.contactAddress : (settings?.contactAddress || '')}
-              onChange={(e) => handleChange('contactAddress', e.target.value)}
-              disabled={!isEditing}
-              multiline
-              rows={1}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start" sx={{ alignSelf: 'flex-start' }}>
-                    <LocationIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
+            {/* Contact Address */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                label="Contact Address"
+                fullWidth
+                value={isEditing ? formData.contactAddress : (settings?.contactAddress || '')}
+                onChange={(e) => handleChange('contactAddress', e.target.value)}
+                disabled={!isEditing}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start"><LocationIcon color="action" /></InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
           </Grid>
+        </CardContent>
+      </Card>
 
-          {/* New Section Divider */}
-          <Grid size={{xs: 12}}>
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Configuration & Defaults
-              </Typography>
-              <Divider />
-            </Box>
+      <Card variant="outlined">
+        <CardHeader 
+          title="Configuration & Defaults" 
+          subheader="Set up your financial and inventory defaults."
+          titleTypographyProps={{ fontWeight: 600, fontSize: '1.1rem' }}
+        />
+        <Divider />
+        <CardContent sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            {/* Currency */}
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                label="Currency Code"
+                fullWidth
+                value={isEditing ? formData.currency : settings?.currency}
+                onChange={(e) => handleChange('currency', e.target.value.toUpperCase())}
+                disabled={!isEditing}
+                helperText="ISO Code (e.g. USD, EUR)"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start"><CurrencyIcon color="action" /></InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+
+            {/* Tax Rate */}
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                label="Default Tax Rate"
+                type="number"
+                fullWidth
+                value={isEditing ? formData.taxRate : settings?.taxRate}
+                onChange={(e) => handleChange('taxRate', parseFloat(e.target.value))}
+                disabled={!isEditing}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start"><TaxIcon color="action" /></InputAdornment>
+                  ),
+                  inputProps: { step: 0.01, min: 0 }
+                }}
+                helperText={isEditing ? "Enter as decimal (0.08 = 8%)" : `${((settings?.taxRate || 0) * 100).toFixed(0)}%`}
+              />
+            </Grid>
+
+            {/* Low Stock Threshold */}
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                label="Global Low Stock Alert"
+                type="number"
+                fullWidth
+                value={isEditing ? formData.lowStockThreshold : settings?.lowStockThreshold}
+                onChange={(e) => handleChange('lowStockThreshold', parseInt(e.target.value))}
+                disabled={!isEditing}
+                helperText="Default threshold for new products"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start"><StockIcon color="action" /></InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
           </Grid>
-
-          {/* Currency */}
-          <Grid size={{xs: 12, md: 4}}>
-            <TextField
-              label="Currency Code"
-              fullWidth
-              value={isEditing ? formData.currency : settings?.currency}
-              onChange={(e) => handleChange('currency', e.target.value.toUpperCase())}
-              disabled={!isEditing}
-              helperText="ISO Code (e.g. USD, EUR)"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <CurrencyIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-
-          {/* Tax Rate */}
-          <Grid size={{xs: 12, md: 4}}>
-            <TextField
-              label="Default Tax Rate"
-              type="number"
-              fullWidth
-              value={isEditing ? formData.taxRate : settings?.taxRate}
-              onChange={(e) => handleChange('taxRate', parseFloat(e.target.value))}
-              disabled={!isEditing}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <TaxIcon color="action" />
-                  </InputAdornment>
-                ),
-                inputProps: { step: 0.01, min: 0 }
-              }}
-              helperText={
-                isEditing 
-                  ? "Enter as decimal (0.08 = 8%)" 
-                  : `Calculated as ${(settings?.taxRate || 0) * 100}%`
-              }
-            />
-          </Grid>
-
-          {/* Low Stock Threshold */}
-          <Grid size={{xs: 12, md: 4}}>
-            <TextField
-              label="Default Low Stock Alert"
-              type="number"
-              fullWidth
-              value={isEditing ? formData.lowStockThreshold : settings?.lowStockThreshold}
-              onChange={(e) => handleChange('lowStockThreshold', parseInt(e.target.value))}
-              disabled={!isEditing}
-              helperText="Units remaining"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <StockIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-
-        </Grid>
-      </Paper>
+        </CardContent>
+      </Card>
       
-      {/* Danger Zone - Only for Owners */}
+      {/* Danger Zone */}
       {isOwner && (
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 4, 
-            border: '1px solid #c22222ff', 
-            bgcolor: '#fff5f5',
-            borderRadius: 2,
-            mt: 10
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, color: '#c22222ff' }} mt='2'>
-            <WarningIcon />
-            <Typography variant="h6" fontWeight="bold">Danger Zone</Typography>
-          </Box>
-          <Divider sx={{ mb: 3, borderColor: '#ffcdd2' }} />
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-            <Box>
-              <Typography variant="subtitle1" fontWeight="bold">Delete Business Account</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Permanently delete your business account and all associated data (inventory, sales, employees). 
-                This action cannot be undone.
-              </Typography>
-            </Box>
-            <Button 
-              variant="outlined" 
-              color="error" 
-              startIcon={<DeleteForeverIcon />}
-              onClick={() => {
-                setDeleteConfirmation('');
-                setOpenDeleteDialog(true);
-              }}
-            >
-              Delete Business
-            </Button>
-          </Box>
-        </Paper>
+        <Box sx={{ mt: 5 }}>
+          <Typography variant="h6" color="error" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '1rem', fontWeight: 600 }}>
+            <WarningIcon fontSize="small" /> Danger Zone
+          </Typography>
+          <Card variant="outlined" sx={{ borderColor: theme.palette.error.light, bgcolor: '#FEF2F2' }}>
+            <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+              <Box>
+                <Typography variant="subtitle1" fontWeight="bold" color="text.primary">Delete Business Account</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Permanently delete your business account and all associated data. This cannot be undone.
+                </Typography>
+              </Box>
+              <Button 
+                variant="outlined" 
+                color="error" 
+                startIcon={<DeleteForeverIcon />}
+                onClick={() => {
+                  setDeleteConfirmation('');
+                  setOpenDeleteDialog(true);
+                }}
+              >
+                Delete Business
+              </Button>
+            </CardContent>
+          </Card>
+        </Box>
       )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog 
         open={openDeleteDialog} 
         onClose={() => setOpenDeleteDialog(false)}
-        maxWidth="sm"
+        maxWidth="xs"
         fullWidth
       >
-        <DialogTitle sx={{ color: '#c22222ff', display: 'flex', alignItems: 'center', gap: 1 }}>
-          <WarningIcon /> Delete Business Permanently?
+        <DialogTitle sx={{ color: 'error.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WarningIcon /> Confirm Deletion
         </DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ mb: 3 }}>
-            This action creates an <strong>atomic deletion</strong> of your entire tenant. 
-            All products, transaction history, and employee accounts will be wiped from the database immediately.
-            <br /><br />
-            Please type <strong>delete</strong> to confirm.
+          <DialogContentText sx={{ mb: 2 }}>
+            This action will wipe all <strong>products</strong>, <strong>transactions</strong>, and <strong>employee accounts</strong> immediately.
           </DialogContentText>
           <TextField
             autoFocus
             fullWidth
-            variant="outlined"
+            size="small"
             placeholder="Type 'delete' to confirm"
             value={deleteConfirmation}
             onChange={(e) => setDeleteConfirmation(e.target.value)}
-            error={deleteConfirmation.length > 0 && deleteConfirmation.toLowerCase() !== 'delete'}
             color="error"
+            sx={{ mt: 1 }}
           />
         </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button onClick={() => setOpenDeleteDialog(false)} color="inherit">
-            Cancel
-          </Button>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setOpenDeleteDialog(false)} color="inherit">Cancel</Button>
           <Button 
             variant="contained" 
             color="error"
             disabled={deleteConfirmation.toLowerCase() !== 'delete' || isDeleting}
             onClick={handleDeleteBusiness}
-            startIcon={isDeleting ? <CircularProgress size={20} color="inherit" /> : <DeleteForeverIcon />}
           >
-            {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+            {isDeleting ? 'Deleting...' : 'Delete Forever'}
           </Button>
         </DialogActions>
       </Dialog>

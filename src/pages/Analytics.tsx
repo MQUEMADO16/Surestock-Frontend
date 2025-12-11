@@ -243,14 +243,17 @@ export default function Analytics() {
     <Box sx={{ p: 3, maxWidth: 1600, margin: '0 auto', minHeight: '80vh' }}>
       
       {/* HEADER */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight="700">Analytics</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" fontWeight="bold" gutterBottom>Analytics</Typography>
+          <Typography variant="body2" color="text.secondary">Monitor key metrics and actionable insights.</Typography>
+        </Box>
         <Button 
           startIcon={<Refresh />} 
           variant="outlined" 
           onClick={fetchTabData} 
           disabled={loading}
-          size="small"
+          size="medium"
         >
           Refresh Data
         </Button>

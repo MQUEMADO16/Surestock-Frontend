@@ -56,9 +56,10 @@ const MainLayout = () => {
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: '#ffffff', // Deep Blue
-          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)', // Adds depth/shadow below header
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)' // Subtle divider
+          backgroundColor: '#ffffff', // SaaS White Header
+          color: '#1F2937', // Dark Text
+          boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.05)', // Very subtle shadow
+          borderBottom: '1px solid #E5E7EB' // Divider
         }}
       >
         <Toolbar>
@@ -71,12 +72,9 @@ const MainLayout = () => {
               display: 'flex', 
               alignItems: 'center', 
               fontWeight: 700, 
-              letterSpacing: '0.5px'
+              letterSpacing: '-0.5px',
+              color: '#0088FE' // Brand Primary Color for Logo
             }}
-            ml='10px'
-            color='#1d407c'
-            mt='5px'
-            marginLeft='10px'
           >
             SureStock
           </Typography>
@@ -85,14 +83,12 @@ const MainLayout = () => {
             <IconButton size="large" onClick={handleMenu} color="inherit">
               <Avatar 
                 sx={{ 
-                  width: 38, 
-                  height: 38, 
-                  bgcolor: '#1976d2',
-                  color: '#ffffff',
-                  fontSize: '1.4rem', 
-                  fontWeight: 500,
-                  pt: '4px',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.3)' // Pop the avatar
+                  width: 36, 
+                  height: 36, 
+                  bgcolor: '#0088FE',
+                  fontSize: '0.9rem', 
+                  fontWeight: 600,
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)' // Subtle pop
                 }}
               >
                 {user?.email?.[0].toUpperCase()}
@@ -101,33 +97,35 @@ const MainLayout = () => {
             <Menu
               id="menu-appbar"
               anchorEl={anchorEl}
-              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
               keepMounted
               transformOrigin={{ vertical: 'top', horizontal: 'right' }}
               open={Boolean(anchorEl)}
               onClose={handleClose}
               PaperProps={{
                 elevation: 3,
-                sx: { mt: 1.5, minWidth: 180 }
+                sx: { mt: 1.5, minWidth: 200, borderRadius: 2 }
               }}
             >
-              <MenuItem disabled sx={{ opacity: 1, color: 'text.primary', fontWeight: 600 }}>
-                {user?.email}
-              </MenuItem>
-              <MenuItem disabled sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
-                Role: {user?.role}
-              </MenuItem>
+              <Box px={2} py={1}>
+                <Typography variant="subtitle2" noWrap fontWeight="600">
+                  {user?.email}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {user?.role}
+                </Typography>
+              </Box>
               <Divider />
-              <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+              <MenuItem onClick={handleLogout} sx={{ color: 'error.main', mt: 1 }}>
                 <ListItemIcon><LogoutIcon fontSize="small" color="error" /></ListItemIcon>
-                Logout
+                Sign Out
               </MenuItem>
             </Menu>
           </div>
         </Toolbar>
       </AppBar>
 
-      {/* Sidebar Drawer with Border and Active States */}
+      {/* Sidebar Drawer */}
       <Drawer
         variant="permanent"
         sx={{
@@ -136,37 +134,47 @@ const MainLayout = () => {
           [`& .MuiDrawer-paper`]: { 
             width: drawerWidth, 
             boxSizing: 'border-box',
-            borderRight: '1px solid #E0E0E0', // Clean separation
-            backgroundColor: '#FAFAFA', // Slightly off-white for contrast
+            borderRight: '1px solid #E5E7EB',
+            backgroundColor: '#FAFAFA', // Light grey sidebar background
           },
         }}
       >
         <Toolbar /> 
-        <Box sx={{ overflow: 'auto', mt: 2 }}>
+        <Box sx={{ overflow: 'auto', mt: 3 }}>
           <List>
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
-                <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+                <ListItem key={item.text} disablePadding sx={{ mb: 0.5, px: 1.5 }}>
                   <ListItemButton 
                     selected={isActive}
                     onClick={() => navigate(item.path)}
                     sx={{
-                      mx: 1,
-                      borderRadius: 1,
-                      backgroundColor: isActive ? 'rgba(62, 107, 142, 0.08)' : 'transparent', // Light blue bg when active
-                      borderLeft: isActive ? '4px solid #3E6B8E' : '4px solid transparent', // Left accent bar
-                      '&.Mui-selected': {
-                        backgroundColor: 'rgba(62, 107, 142, 0.12)',
-                        '&:hover': { backgroundColor: 'rgba(62, 107, 142, 0.18)' }
-                      },
+                      borderRadius: 1.5,
+                      minHeight: 44,
+                      color: isActive ? '#0088FE' : '#4B5563', // Blue active, Dark Grey inactive
+                      backgroundColor: isActive ? 'rgba(0, 136, 254, 0.08)' : 'transparent', // Light blue bg active
                       '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                      }
+                        backgroundColor: isActive ? 'rgba(0, 136, 254, 0.12)' : 'rgba(0, 0, 0, 0.04)',
+                        color: isActive ? '#0088FE' : '#111827',
+                      },
+                      // Left accent border for active state
+                      position: 'relative',
+                      '&::before': isActive ? {
+                        content: '""',
+                        position: 'absolute',
+                        left: -6, // Push slightly outside padding
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        height: '20px',
+                        width: '3px',
+                        backgroundColor: '#0088FE',
+                        borderRadius: '0 4px 4px 0',
+                      } : {},
                     }}
                   >
                     <ListItemIcon sx={{ 
-                      color: isActive ? 'primary.main' : 'text.secondary',
+                      color: 'inherit',
                       minWidth: 40
                     }}>
                       {item.icon}
@@ -174,8 +182,8 @@ const MainLayout = () => {
                     <ListItemText 
                       primary={item.text} 
                       primaryTypographyProps={{ 
-                        fontWeight: isActive ? 600 : 400,
-                        color: isActive ? 'primary.main' : 'text.primary'
+                        fontWeight: isActive ? 600 : 500,
+                        fontSize: '0.95rem'
                       }} 
                     />
                   </ListItemButton>
@@ -186,7 +194,7 @@ const MainLayout = () => {
         </Box>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: '#F3F4F6', minHeight: '100vh' }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 4, bgcolor: '#F8FAFC', minHeight: '100vh' }}>
         <Toolbar /> 
         <Outlet />
       </Box>

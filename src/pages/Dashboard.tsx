@@ -141,8 +141,8 @@ export default function Dashboard() {
       {/* HEADER */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
         <Box>
-          <Typography variant="h4" fontWeight="bold">Overview</Typography>
-          <Typography variant="body1" color="textSecondary">
+          <Typography variant="h4" fontWeight="bold" gutterBottom>Overview</Typography>
+          <Typography variant="body2" color="textSecondary">
             Welcome back! Here's what's happening with your inventory today.
           </Typography>
         </Box>
