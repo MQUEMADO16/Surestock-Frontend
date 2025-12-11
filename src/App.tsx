@@ -6,6 +6,7 @@ import Settings from './pages/Settings';
 import Team from './pages/Team';
 import Inventory from './pages/Inventory';
 import Checkout from './pages/Checkout';
+import Analytics from './pages/Analytics';
 import MainLayout from './components/layout/MainLayout';
 import { Typography } from '@mui/material';
 
@@ -25,7 +26,6 @@ const PublicRoute = ({ children }: { children: JSX.Element }) => {
 
 // Placeholder Pages (We will build these out individually later)
 const Dashboard = () => <Typography variant="h4">Dashboard Overview</Typography>;
-const Reports = () => <Typography variant="h4">Analytics & Reports</Typography>;
 
 function App() {
   return (
@@ -46,7 +46,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/reports" element={<Reports />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/team" element={<Team />} />
             <Route path="/settings" element={<Settings />} />
         </Route>

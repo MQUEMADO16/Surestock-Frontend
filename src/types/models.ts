@@ -45,10 +45,19 @@ export interface TransactionResponse {
   productSku: string;
 }
 
+export enum ReportType {
+  SALES = "SALES",
+  TOP_SELLERS = "TOP_SELLERS",
+  LOW_STOCK = "LOW_STOCK",
+  PROFIT = "PROFIT",
+  DEAD_STOCK = "DEAD_STOCK",
+  RESTOCK = "RESTOCK",
+  INVENTORY = "INVENTORY"
+}
+
 export interface ReportResult {
-  reportType: string;
-  businessId: number;
-  generatedAt: string;
-  data: Record<string, any>; // Flexible map for different report data
+  title: string;
   summary: string;
+  chartType: "BAR" | "LINE" | "PIE" | "TABLE" | "NONE";
+  data: any[]; // Array of objects (e.g., { name: "Product A", value: 100 })
 }
