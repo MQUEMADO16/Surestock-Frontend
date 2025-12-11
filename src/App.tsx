@@ -7,8 +7,8 @@ import Team from './pages/Team';
 import Inventory from './pages/Inventory';
 import Checkout from './pages/Checkout';
 import Analytics from './pages/Analytics';
+import Dashboard from './pages/Dashboard';
 import MainLayout from './components/layout/MainLayout';
-import { Typography } from '@mui/material';
 
 // Guard Component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -23,9 +23,6 @@ const PublicRoute = ({ children }: { children: JSX.Element }) => {
   if (isLoading) return <div>Loading...</div>;
   return isAuthenticated ? <Navigate to="/dashboard" /> : children;
 };
-
-// Placeholder Pages (We will build these out individually later)
-const Dashboard = () => <Typography variant="h4">Dashboard Overview</Typography>;
 
 function App() {
   return (

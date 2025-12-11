@@ -39,7 +39,6 @@ import {
   Timeline, 
   Inventory, 
   ShowChart, 
-  Warning, 
   Refresh 
 } from '@mui/icons-material';
 
@@ -92,7 +91,7 @@ const Widget = ({ title, summary, children, height = 350 }: { title: string, sum
   </Card>
 );
 
-export default function AnalyticsPage() {
+export default function Analytics() {
   const theme = useTheme();
   
   // 0 = Financial, 1 = Inventory, 2 = Forecasting
@@ -139,11 +138,13 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     fetchTabData();
+    // eslint-disable-next-line
   }, [activeTab]);
 
   // --- RENDERERS ---
 
   const renderContent = (type: ReportType) => {
+    // eslint-disable-next-line
     const data = reportCache[type];
     
     if (!data) return null; // Or a skeleton placeholder
@@ -208,7 +209,7 @@ export default function AnalyticsPage() {
             <XAxis dataKey="date" tick={{fontSize: 12}} />
             <YAxis />
             <Tooltip formatter={(val: number) => `$${val.toFixed(2)}`} />
-            <Line type="monotone" dataKey="revenue" stroke={theme.palette.success.main} strokeWidth={3} dot={{r:3}} />
+            <Line type="linear" dataKey="revenue" stroke={theme.palette.success.main} strokeWidth={3} dot={{r:3}} />
           </LineChart>
         </ResponsiveContainer>
       );
