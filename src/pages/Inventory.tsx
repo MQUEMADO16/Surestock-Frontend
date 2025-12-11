@@ -3,7 +3,8 @@ import {
   Box, Typography, Paper, Button, TextField, InputAdornment, 
   IconButton, Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, Chip, Tooltip, Dialog, DialogTitle, 
-  DialogContent, DialogActions, Grid, Alert, CircularProgress
+  DialogContent, DialogActions, Divider, Grid, Alert, CircularProgress,
+  Tabs, Tab, Menu, MenuItem, ListItemIcon, ListItemText, useTheme
 } from '@mui/material';
 import { 
   Add as AddIcon, 
@@ -13,7 +14,8 @@ import {
   Inventory as InventoryIcon,
   SwapVert as StockIcon,
   Warning as WarningIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { Product } from '../types/models';
@@ -21,17 +23,29 @@ import { CreateProductRequest, UpdateProductDetailsRequest } from '../types/payl
 import productService from '../services/productService';
 import businessService from '../services/businessService';
 
+type FilterStatus = 'ALL' | 'LOW' | 'OUT';
+
 const Inventory = () => {
   const { user } = useAuth();
+  const theme = useTheme();
+  
+  // Data State
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // UI State
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
   const [defaultThreshold, setDefaultThreshold] = useState<number>(5);
   const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: 'asc' | 'desc' | null }>({
     key: null,
     direction: null
   });
+
+  // Action Menu State
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [menuProductId, setMenuProductId] = useState<number | null>(null);
 
   // Dialog States
   const [openProductDialog, setOpenProductDialog] = useState(false);
@@ -39,7 +53,6 @@ const Inventory = () => {
   const [dialogLoading, setDialogLoading] = useState(false);
   
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  
   const [productForm, setProductForm] = useState<CreateProductRequest>({
     name: '', sku: '', price: 0, cost: 0, quantity: 0, reorderThreshold: 5
   });
@@ -50,15 +63,12 @@ const Inventory = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      // Parallel fetch for products and settings
       const [productsRes, settingsRes] = await Promise.all([
         productService.getAll(),
         businessService.getSettings()
       ]);
       
       setProducts(productsRes.data);
-      // settingsRes.data might be undefined if the service mock fails or returns differently,
-      // so we add a safe check or default.
       if (settingsRes && settingsRes.data) {
           setDefaultThreshold(settingsRes.data.lowStockThreshold);
       }
@@ -75,20 +85,74 @@ const Inventory = () => {
     loadData();
   }, [loadData]);
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    p.sku.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // --- Filtering Logic ---
+  const getStatus = (p: Product) => {
+    if (p.quantity === 0) return 'OUT';
+    if (p.quantity <= p.reorderThreshold) return 'LOW';
+    return 'OK';
+  };
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          p.sku.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+
+    if (filterStatus === 'LOW') return getStatus(p) === 'LOW' || getStatus(p) === 'OUT'; // Show low AND out in 'Low' tab? Or just low. Usually helps to see both.
+    if (filterStatus === 'OUT') return getStatus(p) === 'OUT';
+    
+    return true;
+  });
+
+  // --- Sorting Logic ---
+  const sortedProducts = React.useMemo(() => {
+    const { key, direction } = sortConfig;
+    if (!key || !direction) return filteredProducts;
+
+    return [...filteredProducts].sort((a, b) => {
+      const valA = a[key as keyof Product];
+      const valB = b[key as keyof Product];
+
+      if (valA == null && valB == null) return 0;
+      if (valA == null) return direction === 'asc' ? -1 : 1;
+      if (valB == null) return direction === 'asc' ? 1 : -1;
+
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        return direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+
+      if (valA < valB) return direction === 'asc' ? -1 : 1;
+      if (valA > valB) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredProducts, sortConfig]);
+
+  // --- Handlers ---
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>, productId: number) => {
+    setMenuAnchor(event.currentTarget);
+    setMenuProductId(productId);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+    setMenuProductId(null);
+  };
+
+  const handleMenuAction = (action: 'edit' | 'delete') => {
+    const product = products.find(p => p.id === menuProductId);
+    if (!product) return;
+
+    if (action === 'edit') handleOpenEdit(product);
+    if (action === 'delete') handleDelete(product.id);
+    
+    handleMenuClose();
+  };
 
   const handleOpenCreate = () => {
     setSelectedProduct(null);
     setProductForm({ 
-      name: '', 
-      sku: '', 
-      price: 0, 
-      cost: 0, 
-      quantity: 0, 
-      reorderThreshold: defaultThreshold 
+      name: '', sku: '', price: 0, cost: 0, quantity: 0, reorderThreshold: defaultThreshold 
     });
     setOpenProductDialog(true);
   };
@@ -126,7 +190,7 @@ const Inventory = () => {
     setSortConfig(prev => {
       if (prev.key !== key) return { key, direction: 'asc' };
       if (prev.direction === 'asc') return { key, direction: 'desc' };
-      return { key: null, direction: null }; // reset
+      return { key: null, direction: null };
     });
   };
 
@@ -134,7 +198,6 @@ const Inventory = () => {
     try {
       setDialogLoading(true);
       if (selectedProduct) {
-        // Edit Mode (Update Details)
         const payload: UpdateProductDetailsRequest = {
           name: productForm.name,
           sku: productForm.sku,
@@ -143,11 +206,8 @@ const Inventory = () => {
           reorderThreshold: Number(productForm.reorderThreshold)
         };
         const res = await productService.updateDetails(selectedProduct.id, payload);
-        
-        // Update local state
         setProducts(prev => prev.map(p => p.id === selectedProduct.id ? res.data : p));
       } else {
-        // Create Mode
         const res = await productService.create(productForm);
         setProducts(prev => [...prev, res.data]);
       }
@@ -167,8 +227,6 @@ const Inventory = () => {
       const res = await productService.updateStock(selectedProduct.id, { 
         quantityChange: Number(stockAdjustment) 
       });
-      
-      // Update local state
       setProducts(prev => prev.map(p => p.id === selectedProduct.id ? res.data : p));
       setOpenStockDialog(false);
     } catch (err) {
@@ -178,213 +236,192 @@ const Inventory = () => {
     }
   };
 
-  const getStatus = (p: Product) => p.quantity <= p.reorderThreshold;
-
-  const sortedProducts = React.useMemo(() => {
-    const { key, direction } = sortConfig;
-    if (!key || !direction) return filteredProducts;
-
-    return [...filteredProducts].sort((a, b) => {
-      // special-case status
-      if (key === 'status') {
-        const aIsLow = getStatus(a);
-        const bIsLow = getStatus(b);
-
-        if (aIsLow === bIsLow) return 0;
-        return direction === 'asc' ? (aIsLow ? 1 : -1) : (aIsLow ? -1 : 1);
-      }
-
-      // default: index the Product field
-      const valA = a[key as keyof Product];
-      const valB = b[key as keyof Product];
-
-      if (valA == null && valB == null) return 0;
-      if (valA == null) return direction === 'asc' ? -1 : 1;
-      if (valB == null) return direction === 'asc' ? 1 : -1;
-
-      if (typeof valA === 'string' && typeof valB === 'string') {
-        return direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-      }
-
-      if (valA < valB) return direction === 'asc' ? -1 : 1;
-      if (valA > valB) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [filteredProducts, sortConfig]);
-
-  const renderSortIndicator = (column: string) => {
+  // --- Render Helpers ---
+  const renderSortArrow = (column: string) => {
     if (sortConfig.key !== column) return null;
-    if (sortConfig.direction === 'asc') return " ▲";
-    if (sortConfig.direction === 'desc') return " ▼";
-    return null;
-  };
-
-  const iconStyle: React.CSSProperties = {
-    display: 'inline-block',
-    width: '1ch',     // reserve space for ▲ or ▼ (or empty)
-    textAlign: 'center'
+    return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
   };
 
   return (
-    <Box>
-      {/* Header & Actions */}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', mb: 3, gap: 2 }}>
-        <Typography variant="h4" fontWeight="600">Inventory</Typography>
-        
-        <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' } }}>
-          <TextField
-            size="small"
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: <InputAdornment position="start"><SearchIcon color="action" /></InputAdornment>
-            }}
-            sx={{ bgcolor: 'white', borderRadius: 1 }}
-          />
+    <Box sx={{ maxWidth: 1600, margin: '0 auto', p: 3 }}>
+      
+      {/* Header Section */}
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, mb: 3, gap: 2 }}>
+        <Box>
+          <Typography variant="h4" fontWeight="bold" gutterBottom>Inventory</Typography>
+          <Typography variant="body2" color="text.secondary">Manage your product catalog and stock levels.</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button 
+            variant="outlined" 
+            startIcon={<RefreshIcon />} 
+            onClick={loadData}
+          >
+            Sync
+          </Button>
           <Button 
             variant="contained" 
             startIcon={<AddIcon />} 
             onClick={handleOpenCreate}
-            sx={{ whiteSpace: 'nowrap' }}
+            disableElevation
           >
             Add Product
           </Button>
-          <IconButton onClick={loadData} title="Refresh">
-            <RefreshIcon />
-          </IconButton>
         </Box>
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-      {/* Products Table */}
-      <TableContainer component={Paper} elevation={2}>
-        <Table sx={{ minWidth: 650 }}>
-          <TableHead sx={{
-            cursor: 'pointer',
-            backgroundColor: '#f0f0f0',
-            fontWeight: 'bold',
-            userSelect: 'none',
-          }}>
-            <TableRow>
-              <TableCell align="left" onClick={() => handleSort('name')} sx={{ cursor: 'pointer', width: '16%' }}>
-                <strong>
-                  Product Name
-                  <span style={iconStyle}>{renderSortIndicator('name')}</span>
-                </strong>
+      {/* Filter Tabs & Search Bar */}
+      <Paper variant="outlined" sx={{ mb: 3, p: 2, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
+        <Tabs 
+          value={filterStatus} 
+          onChange={(_, val) => setFilterStatus(val)}
+          textColor="primary"
+          indicatorColor="primary"
+          sx={{ minHeight: 'unset' }}
+        >
+          <Tab value="ALL" label="All Products" sx={{ textTransform: 'none', minHeight: 40, fontWeight: 600 }} />
+          <Tab value="LOW" icon={<WarningIcon fontSize="small" color="warning"/>} iconPosition="start" label="Low Stock" sx={{ textTransform: 'none', minHeight: 40, fontWeight: 600 }} />
+          <Tab value="OUT" icon={<WarningIcon fontSize="small" color="error"/>} iconPosition="start" label="Out of Stock" sx={{ textTransform: 'none', minHeight: 40, fontWeight: 600 }} />
+        </Tabs>
+
+        <TextField
+          size="small"
+          placeholder="Search by name or SKU..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          InputProps={{
+            startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" color="action" /></InputAdornment>
+          }}
+          sx={{ width: { xs: '100%', md: 300 } }}
+        />
+      </Paper>
+
+      {/* Main Table */}
+      <TableContainer component={Paper} variant="outlined">
+        <Table sx={{ minWidth: 700 }}>
+          <TableHead>
+            <TableRow sx={{ bgcolor: '#F9FAFB' }}>
+              <TableCell onClick={() => handleSort('name')} sx={{ cursor: 'pointer', fontWeight: 'bold' }}>
+                Product Name {renderSortArrow('name')}
               </TableCell>
-              <TableCell align="center" onClick={() => handleSort('sku')} sx={{ cursor: 'pointer', width: '20%' }}>
-                <strong>
-                  SKU
-                  <span style={iconStyle}>{renderSortIndicator('sku')}</span>
-                </strong>
+              <TableCell onClick={() => handleSort('sku')} sx={{ cursor: 'pointer', fontWeight: 'bold' }}>
+                SKU {renderSortArrow('sku')}
               </TableCell>
-              <TableCell align="center" onClick={() => handleSort('price')} sx={{ cursor: 'pointer', width: '10%' }}>
-                <strong>
-                  Price
-                  <span style={iconStyle}>{renderSortIndicator('price')}</span>
-                </strong>
+              <TableCell onClick={() => handleSort('price')} align="right" sx={{ cursor: 'pointer', fontWeight: 'bold' }}>
+                Price {renderSortArrow('price')}
               </TableCell>
-              <TableCell align="center" onClick={() => handleSort('quantity')} sx={{ cursor: 'pointer', width: '10%'  }}>
-                <strong>
-                  Quantity
-                  <span style={iconStyle}>{renderSortIndicator('quantity')}</span>
-                </strong>
+              <TableCell onClick={() => handleSort('quantity')} align="right" sx={{ cursor: 'pointer', fontWeight: 'bold' }}>
+                Quantity {renderSortArrow('quantity')}
               </TableCell>
-              <TableCell align="center" onClick={() => handleSort('status')} sx={{ cursor: 'pointer', width: '10%'  }}>
-                <strong>
-                  Status
-                  <span style={iconStyle}>{renderSortIndicator('status')}</span>
-                </strong>
-              </TableCell>
-              <TableCell align="center" sx={{ cursor: 'pointer', width: '15%' }}>
-                <strong>Actions</strong>
-              </TableCell>
+              <TableCell align="center" sx={{ fontWeight: 'bold' }}>Status</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 5 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                   <CircularProgress />
                 </TableCell>
               </TableRow>
-            ) : filteredProducts.length === 0 ? (
+            ) : sortedProducts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                  No products found.
+                <TableCell colSpan={6} align="center" sx={{ py: 8, color: 'text.secondary' }}>
+                  <InventoryIcon sx={{ fontSize: 48, opacity: 0.2, mb: 1 }} />
+                  <Typography>No products match your filters.</Typography>
+                  <Button size="small" onClick={() => {setFilterStatus('ALL'); setSearchQuery('')}} sx={{ mt: 1 }}>
+                    Clear Filters
+                  </Button>
                 </TableCell>
               </TableRow>
             ) : (
-              sortedProducts.map((product) => (
-                <TableRow key={product.id} hover>
-                  <TableCell align="left">
-                    <Typography variant="body1" fontWeight="500">{product.name}</Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Chip label={product.sku} size="small" variant="outlined" sx={{ fontFamily: 'monospace' }} />
-                  </TableCell>
-                  <TableCell align="center">${product.price.toFixed(2)}</TableCell>
-                  <TableCell align="center">
-                    <Typography 
-                      color={getStatus(product) ? 'error.main' : 'text.primary'}
-                    >
-                      {product.quantity}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    {getStatus(product) ? (
-                      <Chip icon={<WarningIcon />} label="Low Stock" color="error" size="small" />
-                    ) : (
-                      <Chip label="In Stock" color="success" size="small" variant="outlined" />
-                    )}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Tooltip title="Update Stock">
-                      <IconButton color="primary" onClick={() => handleOpenStock(product)}>
-                        <StockIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Edit Details">
-                      <IconButton onClick={() => handleOpenEdit(product)}>
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    {isOwner && (
-                      <Tooltip title="Delete">
-                        <IconButton color="error" onClick={() => handleDelete(product.id)}>
-                          <DeleteIcon />
+              sortedProducts.map((product) => {
+                const status = getStatus(product);
+                return (
+                  <TableRow key={product.id} hover>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="600">{product.name}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption" sx={{ fontFamily: 'monospace', bgcolor: '#f3f4f6', px: 1, py: 0.5, borderRadius: 1 }}>
+                        {product.sku}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">${product.price.toFixed(2)}</TableCell>
+                    <TableCell align="right">
+                      <Typography fontWeight={status !== 'OK' ? 'bold' : 'normal'} color={status !== 'OK' ? 'error.main' : 'inherit'}>
+                        {product.quantity}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      {status === 'OUT' && <Chip label="Out of Stock" color="error" size="small" />}
+                      {status === 'LOW' && <Chip label="Low Stock" color="warning" size="small" />}
+                      {status === 'OK' && <Chip label="In Stock" color="success" variant="outlined" size="small" />}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Quick Update">
+                        <IconButton size="small" color="primary" onClick={() => handleOpenStock(product)} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), mr: 1 }}>
+                          <StockIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
+                      <IconButton size="small" onClick={(e) => handleMenuOpen(e, product.id)}>
+                        <MoreVertIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </TableContainer>
 
+      {/* Action Menu (Edit/Delete) */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+        PaperProps={{ sx: { minWidth: 150, boxShadow: theme.shadows[3] } }}
+      >
+        <MenuItem onClick={() => handleMenuAction('edit')}>
+          <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+          <ListItemText>Edit Details</ListItemText>
+        </MenuItem>
+        {isOwner && (
+          <MenuItem onClick={() => handleMenuAction('delete')} sx={{ color: 'error.main' }}>
+            <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
+            <ListItemText>Delete</ListItemText>
+          </MenuItem>
+        )}
+      </Menu>
+
       {/* Dialog 1: Create / Edit Product */}
       <Dialog open={openProductDialog} onClose={() => setOpenProductDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{selectedProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
         <DialogContent>
-          <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              label="Product Name"
-              fullWidth
-              value={productForm.name}
-              onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-            />
-            <TextField
-              label="SKU"
-              fullWidth
-              value={productForm.sku}
-              onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
-            />
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Grid container spacing={2}>
-              <Grid size={{xs: 6}}>
+              <Grid size={{ xs: 12, sm: 8 }}>
+                <TextField
+                  label="Product Name"
+                  fullWidth
+                  value={productForm.name}
+                  onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <TextField
+                  label="SKU"
+                  fullWidth
+                  value={productForm.sku}
+                  onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
+                />
+              </Grid>
+            </Grid>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 6 }}>
                 <TextField
                   label="Retail Price"
                   type="number"
@@ -394,7 +431,7 @@ const Inventory = () => {
                   onChange={(e) => setProductForm({ ...productForm, price: parseFloat(e.target.value) })}
                 />
               </Grid>
-              <Grid size={{xs: 6}}>
+              <Grid size={{ xs: 6 }}>
                 <TextField
                   label="Wholesale Cost"
                   type="number"
@@ -406,31 +443,34 @@ const Inventory = () => {
               </Grid>
             </Grid>
             
+            <Divider textAlign="left"><Typography variant="caption" color="textSecondary">INVENTORY SETTINGS</Typography></Divider>
+
             <Grid container spacing={2}>
-              <Grid size={{xs: 6}}>
+              <Grid size={{ xs: 6 }}>
                 <TextField
-                  label={selectedProduct ? "Current Quantity (Read-only)" : "Initial Quantity"}
+                  label={selectedProduct ? "Current Qty (Read-only)" : "Initial Qty"}
                   type="number"
                   fullWidth
-                  disabled={!!selectedProduct} // Disable quantity edit here (force them to use stock adjust)
+                  disabled={!!selectedProduct}
                   value={productForm.quantity}
                   onChange={(e) => setProductForm({ ...productForm, quantity: parseInt(e.target.value) })}
                 />
               </Grid>
-              <Grid size={{xs: 6}}>
+              <Grid size={{ xs: 6 }}>
                 <TextField
                   label="Reorder Threshold"
                   type="number"
                   fullWidth
                   value={productForm.reorderThreshold}
                   onChange={(e) => setProductForm({ ...productForm, reorderThreshold: parseInt(e.target.value) })}
+                  helperText="Alert when stock falls below this"
                 />
               </Grid>
             </Grid>
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenProductDialog(false)}>Cancel</Button>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setOpenProductDialog(false)} color="inherit">Cancel</Button>
           <Button variant="contained" onClick={submitProductForm} disabled={dialogLoading}>
             {dialogLoading ? 'Saving...' : 'Save Product'}
           </Button>
@@ -439,33 +479,32 @@ const Inventory = () => {
 
       {/* Dialog 2: Quick Stock Adjustment */}
       <Dialog open={openStockDialog} onClose={() => setOpenStockDialog(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Adjust Stock</DialogTitle>
+        <DialogTitle>Adjust Stock Level</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              Update quantity for <strong>{selectedProduct?.name}</strong>.
+            <Alert severity="info" icon={<InventoryIcon />}>
+              Current Stock: <strong>{selectedProduct?.quantity}</strong>
+            </Alert>
+            <Typography variant="body2">
+              Enter the amount to <strong>add</strong> (positive) or <strong>remove</strong> (negative).
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, bgcolor: '#f5f5f5', p: 2, borderRadius: 1 }}>
-              <InventoryIcon color="action" />
-              <Typography variant="h6">Current: {selectedProduct?.quantity}</Typography>
-            </Box>
-            
             <TextField
               label="Quantity Change"
               type="number"
               fullWidth
               autoFocus
-              placeholder="e.g. 5 or -2"
               value={stockAdjustment}
               onChange={(e) => setStockAdjustment(parseInt(e.target.value))}
-              helperText="Positive to add, Negative to remove"
+              InputProps={{
+                endAdornment: <InputAdornment position="end">units</InputAdornment>
+              }}
             />
           </Box>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2 }}>
           <Button onClick={() => setOpenStockDialog(false)}>Cancel</Button>
           <Button variant="contained" onClick={submitStockUpdate} disabled={dialogLoading || stockAdjustment === ''}>
-            {dialogLoading ? 'Updating...' : 'Update Stock'}
+            Update
           </Button>
         </DialogActions>
       </Dialog>
@@ -473,5 +512,9 @@ const Inventory = () => {
     </Box>
   );
 };
+
+function alpha(color: string, opacity: number) {
+  return color + Math.round(opacity * 255).toString(16).padStart(2, '0');
+}
 
 export default Inventory;
