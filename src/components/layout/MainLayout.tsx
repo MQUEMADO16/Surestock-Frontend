@@ -15,6 +15,8 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
+import logo from '../../resources/surestock-logo.png';
+
 const drawerWidth = 260;
 
 const MainLayout = () => {
@@ -73,21 +75,7 @@ const MainLayout = () => {
           justifyContent: 'center',
           px: 2
         }}>
-          <Typography 
-            variant="h5" 
-            noWrap 
-            component="div" 
-            sx={{ 
-              fontWeight: 800, 
-              letterSpacing: '-0.5px',
-              color: '#0088FE', // Brand Primary
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }}
-          >
-            SureStock
-          </Typography>
+          <img src={logo} style={{ height: '48px' }} alt='SureStock Logo' />
         </Box>
 
         <Divider sx={{ mb: 2, mx: 4, color: '#000000' }} variant='middle' />
