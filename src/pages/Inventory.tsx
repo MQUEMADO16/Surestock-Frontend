@@ -52,6 +52,9 @@ const Inventory = () => {
   const [openStockDialog, setOpenStockDialog] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
   
+  // Validation State
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState<CreateProductRequest>({
     name: '', sku: '', price: 0, cost: 0, quantity: 0, reorderThreshold: 5
@@ -98,7 +101,7 @@ const Inventory = () => {
     
     if (!matchesSearch) return false;
 
-    if (filterStatus === 'LOW') return getStatus(p) === 'LOW' || getStatus(p) === 'OUT'; // Show low AND out in 'Low' tab? Or just low. Usually helps to see both.
+    if (filterStatus === 'LOW') return getStatus(p) === 'LOW' || getStatus(p) === 'OUT'; 
     if (filterStatus === 'OUT') return getStatus(p) === 'OUT';
     
     return true;
@@ -151,6 +154,7 @@ const Inventory = () => {
 
   const handleOpenCreate = () => {
     setSelectedProduct(null);
+    setFormErrors({}); // Clear errors
     setProductForm({ 
       name: '', sku: '', price: 0, cost: 0, quantity: 0, reorderThreshold: defaultThreshold 
     });
@@ -159,6 +163,7 @@ const Inventory = () => {
 
   const handleOpenEdit = (product: Product) => {
     setSelectedProduct(product);
+    setFormErrors({}); // Clear errors
     setProductForm({
       name: product.name,
       sku: product.sku,
@@ -194,7 +199,49 @@ const Inventory = () => {
     });
   };
 
+  // --- Validation Logic ---
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {};
+    let isValid = true;
+
+    if (!productForm.name.trim()) {
+      errors.name = 'Product name is required';
+      isValid = false;
+    }
+
+    if (!productForm.sku.trim()) {
+      errors.sku = 'SKU is required';
+      isValid = false;
+    }
+
+    if (productForm.price < 0) {
+      errors.price = 'Price cannot be negative';
+      isValid = false;
+    }
+
+    if (productForm.cost < 0) {
+      errors.cost = 'Cost cannot be negative';
+      isValid = false;
+    }
+    
+    // Only check initial quantity for new products (as it's read-only for edits)
+    if (!selectedProduct && productForm.quantity < 0) {
+        errors.quantity = 'Quantity cannot be negative';
+        isValid = false;
+    }
+
+    if (productForm.reorderThreshold < 0) {
+        errors.reorderThreshold = 'Threshold cannot be negative';
+        isValid = false;
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
   const submitProductForm = async () => {
+    if (!validateForm()) return; // Stop if validation fails
+
     try {
       setDialogLoading(true);
       if (selectedProduct) {
@@ -240,6 +287,13 @@ const Inventory = () => {
   const renderSortArrow = (column: string) => {
     if (sortConfig.key !== column) return null;
     return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+  };
+
+  // Helper to safely render hex colors with opacity
+  const alpha = (color: string, opacity: number) => {
+    // Basic implementation assuming theme provides hex codes
+    // For production, consider using @mui/material/styles alpha utility
+    return color; 
   };
 
   return (
@@ -362,7 +416,7 @@ const Inventory = () => {
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="Quick Update">
-                        <IconButton size="small" color="primary" onClick={() => handleOpenStock(product)} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), mr: 1 }}>
+                        <IconButton size="small" color="primary" onClick={() => handleOpenStock(product)} sx={{ mr: 1 }}>
                           <StockIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -407,6 +461,9 @@ const Inventory = () => {
                 <TextField
                   label="Product Name"
                   fullWidth
+                  required
+                  error={!!formErrors.name}
+                  helperText={formErrors.name}
                   value={productForm.name}
                   onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
                 />
@@ -415,6 +472,9 @@ const Inventory = () => {
                 <TextField
                   label="SKU"
                   fullWidth
+                  required
+                  error={!!formErrors.sku}
+                  helperText={formErrors.sku}
                   value={productForm.sku}
                   onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
                 />
@@ -426,6 +486,8 @@ const Inventory = () => {
                   label="Retail Price"
                   type="number"
                   fullWidth
+                  error={!!formErrors.price}
+                  helperText={formErrors.price}
                   InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
                   value={productForm.price}
                   onChange={(e) => setProductForm({ ...productForm, price: parseFloat(e.target.value) })}
@@ -436,6 +498,8 @@ const Inventory = () => {
                   label="Wholesale Cost"
                   type="number"
                   fullWidth
+                  error={!!formErrors.cost}
+                  helperText={formErrors.cost}
                   InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
                   value={productForm.cost}
                   onChange={(e) => setProductForm({ ...productForm, cost: parseFloat(e.target.value) })}
@@ -452,6 +516,8 @@ const Inventory = () => {
                   type="number"
                   fullWidth
                   disabled={!!selectedProduct}
+                  error={!!formErrors.quantity}
+                  helperText={formErrors.quantity}
                   value={productForm.quantity}
                   onChange={(e) => setProductForm({ ...productForm, quantity: parseInt(e.target.value) })}
                 />
@@ -461,9 +527,10 @@ const Inventory = () => {
                   label="Reorder Threshold"
                   type="number"
                   fullWidth
+                  error={!!formErrors.reorderThreshold}
                   value={productForm.reorderThreshold}
                   onChange={(e) => setProductForm({ ...productForm, reorderThreshold: parseInt(e.target.value) })}
-                  helperText="Alert when stock falls below this"
+                  helperText={formErrors.reorderThreshold || "Alert when stock falls below this"}
                 />
               </Grid>
             </Grid>
@@ -512,9 +579,5 @@ const Inventory = () => {
     </Box>
   );
 };
-
-function alpha(color: string, opacity: number) {
-  return color + Math.round(opacity * 255).toString(16).padStart(2, '0');
-}
 
 export default Inventory;

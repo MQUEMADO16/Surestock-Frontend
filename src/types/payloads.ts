@@ -34,7 +34,7 @@ export interface CreateProductRequest {
   price: number;
   cost: number;
   quantity: number;
-  reorderThreshold?: number;
+  reorderThreshold: number;
 }
 
 export interface UpdateStockRequest {
